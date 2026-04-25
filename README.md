@@ -82,8 +82,8 @@ define('WA_NUMBER', '6281234567890'); // Nomor WA admin desa (format 62xxx)
 
 | Halaman       | URL                                       |
 | ------------- | ----------------------------------------- |
-| Website Utama | http://localhost/sid-desa/                |
-| Login Admin   | http://localhost/sid-desa/admin/login.php |
+| Website Utama | http://localhost/sid_desa/                |
+| Login Admin   | http://localhost/sid_desa/admin/login.php |
 
 ---
 
