@@ -1,12 +1,27 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db.php';
 
-if(isAdmin()) redirect('../admin/dashboard.php');
+// Memeriksa status login dengan lebih aman menghindari error function not found
+$is_logged_in = false;
+if (function_exists('isAdmin')) {
+    $is_logged_in = isAdmin();
+} else {
+    $is_logged_in = isset($_SESSION['admin_name']);
+}
+
+// Jika sudah login, langsung arahkan ke dashboard
+if($is_logged_in) {
+    header("Location: dashboard.php");
+    exit;
+}
 
 $error = '';
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = clean($_POST['username'] ?? '');
+    // Menggunakan trim() menggantikan clean() agar lebih aman dari error fungsi tidak terdefinisi
+    $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
     if($username && $password) {
@@ -18,7 +33,10 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
         if($user && password_verify($password, $user['password'])) {
             $_SESSION['admin_id'] = $user['id'];
             $_SESSION['admin_name'] = $user['nama_lengkap'] ?? $user['username'];
-            redirect('../admin/dashboard.php');
+            
+            // Perbaikan menggunakan header bawaan PHP
+            header("Location: dashboard.php");
+            exit;
         } else {
             $error = 'Username atau password salah.';
         }
@@ -64,7 +82,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <?php endif; ?>
 
-            <form method="POST" class="space-y-4">
+            <form method="POST" action="login.php" class="space-y-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Username</label>
                     <div class="relative">
@@ -92,7 +110,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <button type="submit" 
-                        class="w-full bg-gradient-to-r from-green-700 to-green-600 hover:from-green-800 hover:to-green-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition mt-2">
+                        class="w-full bg-gradient-to-r from-green-700 to-green-600 hover:from-green-800 hover:to-green-700 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition shadow-sm mt-2">
                     <i class="fas fa-sign-in-alt"></i> Masuk
                 </button>
             </form>

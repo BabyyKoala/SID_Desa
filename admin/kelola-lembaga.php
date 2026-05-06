@@ -6,8 +6,17 @@ $page_title = 'Kelola Perangkat Desa';
 // DELETE
 if(isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
+    
+    // Hapus file foto jika ada
+    $row_ = $conn->query("SELECT foto FROM lembaga WHERE id=$id")->fetch_assoc();
+    if($row_ && $row_['foto'] && file_exists('../uploads/'.$row_['foto'])) {
+        unlink('../uploads/'.$row_['foto']);
+    }
+    
     $conn->query("DELETE FROM lembaga WHERE id=$id");
-    redirect('kelola-lembaga.php?msg=deleted');
+    
+    header("Location: kelola-lembaga.php?msg=deleted");
+    exit;
 }
 
 $action = $_GET['action'] ?? 'list';
@@ -16,13 +25,16 @@ $edit_data = null;
 if($action === 'edit' && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     $edit_data = $conn->query("SELECT * FROM lembaga WHERE id=$id")->fetch_assoc();
-    if(!$edit_data) redirect('kelola-lembaga.php');
+    if(!$edit_data) {
+        header("Location: kelola-lembaga.php");
+        exit;
+    }
 }
 
 // SAVE
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nama    = clean($_POST['nama'] ?? '');
-    $jabatan = clean($_POST['jabatan'] ?? '');
+    $nama    = trim($_POST['nama'] ?? '');
+    $jabatan = trim($_POST['jabatan'] ?? '');
     $urutan  = (int)($_POST['urutan'] ?? 0);
     $id      = (int)($_POST['id'] ?? 0);
 
@@ -33,10 +45,15 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             if(in_array($ext, ['jpg','jpeg','png','gif','webp'])) {
                 $newname = 'lembaga_' . time() . '.' . $ext;
                 if(move_uploaded_file($_FILES['foto']['tmp_name'], '../uploads/'.$newname)) {
+                    // Hapus foto lama jika ada
+                    if($foto && file_exists('../uploads/'.$foto)) {
+                        unlink('../uploads/'.$foto);
+                    }
                     $foto = $newname;
                 }
             }
         }
+        
         if($id) {
             $stmt = $conn->prepare("UPDATE lembaga SET nama=?, jabatan=?, foto=?, urutan=? WHERE id=?");
             $stmt->bind_param("sssii", $nama, $jabatan, $foto, $urutan, $id);
@@ -44,8 +61,11 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare("INSERT INTO lembaga (nama, jabatan, foto, urutan) VALUES (?, ?, ?, ?)");
             $stmt->bind_param("sssi", $nama, $jabatan, $foto, $urutan);
         }
-        $stmt->execute();
-        redirect('kelola-lembaga.php?msg=saved');
+        
+        if($stmt->execute()) {
+            header("Location: kelola-lembaga.php?msg=saved");
+            exit;
+        }
     }
 }
 
@@ -54,7 +74,7 @@ require_once 'layout.php';
 ?>
 
 <?php if(isset($_GET['msg'])): ?>
-<div class="bg-primary-50 border border-primary-200 text-primary-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
+<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
     <i class="fas fa-check-circle"></i>
     <?= $_GET['msg'] === 'saved' ? 'Data perangkat berhasil disimpan.' : 'Data perangkat berhasil dihapus.' ?>
 </div>
@@ -64,7 +84,7 @@ require_once 'layout.php';
 
 <div class="flex items-center justify-between mb-6">
     <div class="text-sm text-gray-500"><?= $lembaga->num_rows ?> perangkat terdaftar</div>
-    <a href="?action=add" class="bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 transition">
+    <a href="?action=add" class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 transition">
         <i class="fas fa-plus"></i> Tambah Perangkat
     </a>
 </div>
@@ -86,11 +106,11 @@ require_once 'layout.php';
                 <td class="px-5 py-3 text-gray-400"><?= $no++ ?></td>
                 <td class="px-5 py-3">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <div class="w-9 h-9 bg-green-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                             <?php if($row['foto'] && file_exists('../uploads/'.$row['foto'])): ?>
                             <img src="../uploads/<?= $row['foto'] ?>" class="w-9 h-9 object-cover rounded-full">
                             <?php else: ?>
-                            <i class="fas fa-user text-primary-400 text-sm"></i>
+                            <i class="fas fa-user text-green-500 text-sm"></i>
                             <?php endif; ?>
                         </div>
                         <span class="font-semibold text-gray-800"><?= htmlspecialchars($row['nama']) ?></span>
@@ -119,7 +139,7 @@ require_once 'layout.php';
 <?php else: ?>
 
 <div class="mb-5">
-    <a href="kelola-lembaga.php" class="text-sm text-primary-600 hover:underline flex items-center gap-1 font-semibold">
+    <a href="kelola-lembaga.php" class="text-sm text-green-600 hover:underline flex items-center gap-1 font-semibold">
         <i class="fas fa-arrow-left text-xs"></i> Kembali
     </a>
 </div>
@@ -127,7 +147,7 @@ require_once 'layout.php';
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 max-w-lg">
     <h2 class="font-bold text-gray-800 mb-5 text-lg"><?= $edit_data ? 'Edit Perangkat Desa' : 'Tambah Perangkat Desa' ?></h2>
     
-    <form method="POST" enctype="multipart/form-data" class="space-y-4">
+    <form method="POST" action="kelola-lembaga.php" enctype="multipart/form-data" class="space-y-4">
         <?php if($edit_data): ?>
         <input type="hidden" name="id" value="<?= $edit_data['id'] ?>">
         <input type="hidden" name="existing_foto" value="<?= $edit_data['foto'] ?>">
@@ -137,36 +157,44 @@ require_once 'layout.php';
             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
             <input type="text" name="nama"
                    value="<?= htmlspecialchars($edit_data['nama'] ?? '') ?>"
-                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400" required>
+                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required>
         </div>
+        
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jabatan <span class="text-red-500">*</span></label>
             <input type="text" name="jabatan"
                    value="<?= htmlspecialchars($edit_data['jabatan'] ?? '') ?>"
                    placeholder="cth: Kepala Desa, Sekretaris Desa..."
-                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400" required>
+                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" required>
         </div>
+        
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Urutan Tampil</label>
             <input type="number" name="urutan" min="0"
                    value="<?= $edit_data['urutan'] ?? 0 ?>"
-                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400">
+                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
             <p class="text-xs text-gray-400 mt-1">Angka kecil tampil lebih awal. Kepala Desa = 1</p>
         </div>
+        
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Foto <span class="text-gray-400 font-normal">(opsional)</span></label>
             <?php if(!empty($edit_data['foto']) && file_exists('../uploads/'.$edit_data['foto'])): ?>
-            <img src="../uploads/<?= $edit_data['foto'] ?>" class="h-16 w-16 rounded-full border object-cover mb-2">
+            <div class="mb-3 flex items-center gap-3">
+                <img src="../uploads/<?= $edit_data['foto'] ?>" class="h-16 w-16 rounded-full border object-cover">
+                <span class="text-xs text-gray-400">Foto saat ini. Upload baru untuk mengganti.</span>
+            </div>
             <?php endif; ?>
             <input type="file" name="foto" accept="image/*"
-                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-primary-100 file:text-primary-700 file:text-xs file:font-semibold">
+                   class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-green-100 file:text-green-700 file:text-xs file:font-semibold">
         </div>
 
-        <div class="flex gap-3 pt-2">
-            <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition">
+        <div class="flex gap-3 pt-4">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition shadow-sm">
                 <i class="fas fa-save"></i> Simpan
             </button>
-            <a href="kelola-lembaga.php" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-6 py-3 rounded-xl transition">Batal</a>
+            <a href="kelola-lembaga.php" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-6 py-3 rounded-xl transition flex items-center">
+                Batal
+            </a>
         </div>
     </form>
 </div>

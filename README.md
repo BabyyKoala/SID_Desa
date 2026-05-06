@@ -5,8 +5,7 @@
 ---
 
 ## 📁 Struktur Folder
-
-```
+```text
 sid-desa/
 ├── config/
 │   ├── db.php          ← Konfigurasi database
@@ -16,7 +15,7 @@ sid-desa/
 │   ├── ajukan-surat.php     ← Form pengajuan surat
 │   ├── cek-status.php       ← Cek status pengajuan
 │   ├── pengaduan.php        ← Form pengaduan warga
-│   ├── informasi.php        ← Info berita, UMKM, potensi, lembaga
+│   ├── informasi.php        ← Info berita, UMKM, potensi, lembaga (Dilengkapi UI Modal Pop-up)
 │   ├── detail-berita.php    ← Detail halaman berita
 │   ├── layanan.php          ← Halaman layanan
 │   ├── transparansi.php     ← APBDes & program desa
@@ -30,15 +29,17 @@ sid-desa/
 │   ├── kelola-pengaduan.php ← CRUD + update status pengaduan
 │   ├── kelola-berita.php    ← CRUD berita
 │   ├── kelola-umkm.php      ← CRUD UMKM
+│   ├── kelola-potensi.php   ← CRUD potensi unggulan desa
 │   ├── kelola-lembaga.php   ← CRUD perangkat desa
 │   ├── kelola-transparansi.php ← CRUD APBDes & program
 │   └── logout.php           ← Logout
 ├── uploads/
 │   ├── berita/             ← Foto berita
 │   ├── pengaduan/          ← Foto pengaduan
+│   ├── potensi/            ← Foto potensi desa
 │   └── umkm/               ← Foto UMKM
 ├── database.sql            ← Script database lengkap
-└── index.php               ← Halaman utama
+└── index.php               ← Halaman utama            ← Halaman utama
 ```
 
 ---
@@ -74,7 +75,7 @@ define('DB_HOST', 'localhost');   // host database
 define('DB_USER', 'root');        // username MySQL
 define('DB_PASS', '');            // password MySQL (kosong untuk XAMPP default)
 define('DB_NAME', 'sid_desa');    // nama database
-define('BASE_URL', 'http://localhost/sid-desa');  // URL website
+define('BASE_URL', 'http://localhost/sid_desa');  // URL website
 define('WA_NUMBER', '6281234567890'); // Nomor WA admin desa (format 62xxx)
 ```
 
@@ -130,6 +131,7 @@ echo password_hash('password_baru_anda', PASSWORD_DEFAULT);
 - ✅ **Kelola Pengaduan** — Lihat, ubah status, hapus + foto
 - ✅ **Kelola Berita** — Tambah, edit, hapus + upload foto
 - ✅ **Kelola UMKM** — Tambah, edit, hapus + upload foto
+- ✅ **Kelola Potensi** — Tambah, edit, hapus data direktori potensi desa 
 - ✅ **Kelola Perangkat Desa** — Tambah, edit, urutan, hapus
 - ✅ **Kelola Transparansi** — APBDes & Program Desa CRUD
 
@@ -152,7 +154,7 @@ echo password_hash('password_baru_anda', PASSWORD_DEFAULT);
 
 ### Ganti Nama Desa
 
-Cari & replace `Desa ABC` di semua file.
+Cari & replace `Desa` di semua file.
 
 ### Ganti Nomor WhatsApp
 
@@ -192,5 +194,5 @@ Hubungi administrator sistem desa untuk bantuan teknis.
 
 ---
 
-_SID Desa ABC — Sistem Informasi Desa Digital_
+_SID Desa — Sistem Informasi Desa Digital_
 _Dibuat untuk kemajuan dan pelayanan masyarakat desa_

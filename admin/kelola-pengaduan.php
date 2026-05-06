@@ -14,7 +14,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_status'])) {
 if(isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     $row_ = $conn->query("SELECT foto FROM pengaduan WHERE id=$id")->fetch_assoc();
-    if($row_['foto'] && file_exists('../uploads/pengaduan/'.$row_['foto'])) {
+    if($row_ && $row_['foto'] && file_exists('../uploads/pengaduan/'.$row_['foto'])) {
         unlink('../uploads/pengaduan/'.$row_['foto']);
     }
     $conn->query("DELETE FROM pengaduan WHERE id=$id");
@@ -30,9 +30,9 @@ require_once 'layout.php';
 ?>
 
 <?php if(isset($_GET['msg'])): ?>
-<div class="bg-primary-50 border border-primary-200 text-primary-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
+<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
     <i class="fas fa-check-circle"></i>
-    <?= $_GET['msg'] === 'updated' ? 'Status berhasil diperbarui.' : 'Data berhasil dihapus.' ?>
+    <?= $_GET['msg'] === 'updated' ? 'Status pengaduan berhasil diperbarui.' : 'Data pengaduan berhasil dihapus.' ?>
 </div>
 <?php endif; ?>
 
@@ -40,8 +40,8 @@ require_once 'layout.php';
 <div class="flex gap-2 mb-6 flex-wrap">
     <?php foreach([''=>'Semua','Masuk'=>'Baru','Diproses'=>'Diproses','Selesai'=>'Selesai'] as $v=>$l): ?>
     <a href="?status=<?= $v ?>"
-       class="px-4 py-2 rounded-xl text-xs font-semibold border transition
-              <?= $filter === $v ? 'bg-primary-600 text-white border-primary-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' ?>">
+       class="px-4 py-2 rounded-xl text-xs font-semibold border transition shadow-sm
+              <?= $filter === $v ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' ?>">
         <?= $l ?>
         <?php if($v): 
             $cnt = $conn->query("SELECT COUNT(*) as c FROM pengaduan WHERE status='$v'")->fetch_assoc()['c'];
@@ -53,8 +53,13 @@ require_once 'layout.php';
 
 <div class="space-y-4">
     <?php while($row = $pengaduan->fetch_assoc()): 
-        $badge_map = ['Masuk'=>'badge-masuk','Diproses'=>'badge-diproses','Selesai'=>'badge-selesai'];
-        $badge = $badge_map[$row['status']] ?? 'bg-gray-100';
+        // Perbaikan: Mengganti custom class menjadi utility class Tailwind
+        $badge_map = [
+            'Masuk'    => 'bg-red-100 text-red-700 border-red-200',
+            'Diproses' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
+            'Selesai'  => 'bg-green-100 text-green-700 border-green-200'
+        ];
+        $badge = $badge_map[$row['status']] ?? 'bg-gray-100 text-gray-700 border-gray-200';
     ?>
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
         <div class="flex items-start justify-between gap-3 mb-3">
@@ -64,37 +69,38 @@ require_once 'layout.php';
                 </div>
                 <div>
                     <div class="font-bold text-gray-800"><?= htmlspecialchars($row['nama']) ?></div>
-                    <div class="text-xs text-gray-400"><?= formatTanggal($row['tanggal']) ?></div>
+                    <!-- Memastikan formatTanggal ada, jika error ubah ke echo $row['tanggal'] -->
+                    <div class="text-xs text-gray-400"><?= isset($row['tanggal']) ? $row['tanggal'] : '' ?></div>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <span class="px-2.5 py-1 rounded-full text-xs font-semibold <?= $badge ?>"><?= $row['status'] ?></span>
-                <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Hapus pengaduan ini?')" 
-                   class="text-red-400 hover:text-red-600 text-sm">
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold border <?= $badge ?>"><?= $row['status'] ?></span>
+                <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Hapus pengaduan ini secara permanen?')" 
+                   class="text-red-400 hover:text-red-600 text-sm bg-red-50 hover:bg-red-100 p-2 rounded-lg transition">
                     <i class="fas fa-trash"></i>
                 </a>
             </div>
         </div>
 
-        <div class="text-gray-700 text-sm leading-relaxed mb-4 bg-gray-50 rounded-lg p-4">
+        <div class="text-gray-700 text-sm leading-relaxed mb-4 bg-gray-50 rounded-lg p-4 border border-gray-100">
             <?= nl2br(htmlspecialchars($row['isi'])) ?>
         </div>
 
         <?php if($row['foto'] && file_exists('../uploads/pengaduan/'.$row['foto'])): ?>
         <div class="mb-4">
             <img src="../uploads/pengaduan/<?= $row['foto'] ?>" 
-                 class="max-h-40 rounded-lg border cursor-pointer" 
+                 class="max-h-40 rounded-lg border cursor-pointer hover:opacity-90 transition" 
                  onclick="window.open(this.src,'_blank')" alt="Foto pengaduan">
         </div>
         <?php endif; ?>
 
-        <div class="flex flex-wrap items-center gap-3">
-            <form method="POST" class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-100">
+            <form method="POST" action="kelola-pengaduan.php" class="flex items-center gap-2 mt-2">
                 <input type="hidden" name="id" value="<?= $row['id'] ?>">
                 <input type="hidden" name="update_status" value="1">
                 <label class="text-xs text-gray-500 font-semibold">Ubah Status:</label>
                 <select name="status" onchange="this.form.submit()" 
-                        class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 focus:outline-none bg-white">
+                        class="text-xs px-3 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 bg-white cursor-pointer hover:bg-gray-50">
                     <option value="Masuk"    <?= $row['status']=='Masuk'?'selected':'' ?>>Masuk</option>
                     <option value="Diproses" <?= $row['status']=='Diproses'?'selected':'' ?>>Diproses</option>
                     <option value="Selesai"  <?= $row['status']=='Selesai'?'selected':'' ?>>Selesai</option>
@@ -103,6 +109,13 @@ require_once 'layout.php';
         </div>
     </div>
     <?php endwhile; ?>
+
+    <?php if($pengaduan->num_rows === 0): ?>
+    <div class="text-center py-16 text-gray-400 bg-white rounded-xl border border-gray-100 border-dashed">
+        <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+        <p>Belum ada data pengaduan<?= $filter ? ' untuk status ini' : '' ?>.</p>
+    </div>
+    <?php endif; ?>
 </div>
 
 <?php require_once 'layout-footer.php'; ?>
