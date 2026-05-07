@@ -20,33 +20,45 @@ $error = '';
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama = clean($_POST['nama'] ?? '');
     $isi  = clean($_POST['isi'] ?? '');
-    $foto = '';
+    $foto = null; // Set default null agar database menerima jika tidak ada foto
 
     if(!$nama || !$isi) {
         $error = 'Nama dan isi laporan wajib diisi.';
     } else {
-        // Upload foto opsional
+        // Logika Upload Foto
         if(isset($_FILES['foto']) && $_FILES['foto']['size'] > 0) {
             $ext = strtolower(pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION));
             $allowed = ['jpg','jpeg','png','gif','webp'];
+            
             if(!in_array($ext, $allowed)) {
-                $error = 'Format foto tidak didukung. Gunakan JPG, PNG, atau GIF.';
+                $error = 'Format foto tidak didukung. Gunakan JPG, PNG, WEBP, atau GIF.';
             } elseif($_FILES['foto']['size'] > 5 * 1024 * 1024) {
                 $error = 'Ukuran foto maksimal 5MB.';
             } else {
-                $foto = 'pengaduan_' . time() . '.' . $ext;
-                // Pastikan folder uploads/pengaduan/ sudah dibuat di server Anda
-                move_uploaded_file($_FILES['foto']['tmp_name'], '../uploads/pengaduan/' . $foto);
+                // Buat folder otomatis jika belum ada
+                if (!is_dir('../uploads/pengaduan')) { 
+                    mkdir('../uploads/pengaduan', 0777, true); 
+                }
+                
+                // Beri nama unik agar tidak bentrok
+                $foto = 'pengaduan_' . time() . '_' . uniqid() . '.' . $ext;
+                
+                if(!move_uploaded_file($_FILES['foto']['tmp_name'], '../uploads/pengaduan/' . $foto)) {
+                    $error = 'Gagal mengunggah foto ke server. Periksa izin folder.';
+                }
             }
         }
 
+        // Jika tidak ada error validasi atau error upload, masukkan ke database
         if(!$error) {
             $stmt = $conn->prepare("INSERT INTO pengaduan (nama, isi, foto) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $nama, $isi, $foto);
+            
             if($stmt->execute()) {
                 $success = true;
             } else {
-                $error = 'Terjadi kesalahan. Coba lagi.';
+                // Menampilkan pesan error spesifik jika database menolak (berguna untuk debugging)
+                $error = 'Terjadi kesalahan database: ' . $conn->error;
             }
         }
     }
@@ -63,7 +75,6 @@ require_once '../config/header.php';
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <!-- Header -->
         <div class="bg-gradient-to-r from-orange-500 to-orange-400 p-6 text-white">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center shadow-sm">
@@ -85,7 +96,6 @@ require_once '../config/header.php';
                 <h2 class="text-xl font-extrabold text-gray-800 mb-2">Laporan Terkirim!</h2>
                 <p class="text-gray-500 mb-6">Terima kasih atas laporan Anda. Perangkat desa akan segera menindaklanjuti pengaduan ini.</p>
                 
-                <!-- Perbaikan teks WhatsApp -->
                 <a href="https://wa.me/<?= WA_NUMBER ?>?text=Halo+Admin+Desa+Darmakradenan,+saya+baru+saja+mengirim+laporan+pengaduan+melalui+website+atas+nama+*<?= urlencode($_POST['nama'] ?? '') ?>*.+Mohon+ditindaklanjuti.+Terima+kasih." 
                    target="_blank"
                    class="inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-3.5 rounded-xl transition shadow-sm mb-4 w-full sm:w-auto">
