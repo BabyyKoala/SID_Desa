@@ -88,26 +88,12 @@ define('WA_NUMBER', '6281234567890'); // Nomor WA admin desa (format 62xxx)
 
 ---
 
-## 🔐 Login Admin Default
+## 🔐 Login Admin 
 
-| Username | Password   |
-| -------- | ---------- |
-| `admin`  | `password` |
-
-> ⚠️ **PENTING:** Ganti password setelah login pertama!
-
-Untuk mengubah password, jalankan query SQL ini di phpMyAdmin:
-
-```sql
-UPDATE users SET password = '$2y$10$...' WHERE username = 'admin';
-```
-
-Atau gunakan PHP untuk generate hash:
-
-```php
-echo password_hash('password_baru_anda', PASSWORD_DEFAULT);
-```
-
+Hak Akses / Role | Username  | Password       | Keterangan
+Super Admin      | admin     | SuperAdmin2026 | Akses penuh ke seluruh fitur dan pengaturan.
+Staf Pelayanan   | staf_desa | StafDarma2026  | Akses kelola surat, pengaduan, dan berita.
+Kepala Desa      | kades     | KadesDarma2026 | Hanya akses pantau Dashboard dan Laporan.
 ---
 
 ## 📱 Fitur Lengkap

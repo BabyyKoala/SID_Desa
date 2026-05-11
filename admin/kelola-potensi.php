@@ -141,14 +141,45 @@ $potensi_list = $conn->query("SELECT * FROM potensi ORDER BY tanggal DESC");
 require_once 'layout.php'; 
 ?>
 
-<!-- Tombol Kembali (Hanya tampil di mode Edit) -->
+<?php if($success || $error): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    <?php if($success): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: '<?= $success ?>',
+        confirmButtonColor: '#059669',
+        customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+    }).then(() => {
+        // Membersihkan URL dari parameter ?pesan=
+        if(window.location.search.includes('pesan=')) {
+            const url = new URL(window.location);
+            url.searchParams.delete('pesan');
+            window.history.replaceState(null, null, url.pathname + url.search);
+        }
+    });
+    <?php endif; ?>
+    
+    <?php if($error): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Kesalahan',
+        text: '<?= $error ?>',
+        confirmButtonColor: '#ef4444',
+        customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+    });
+    <?php endif; ?>
+});
+</script>
+<?php endif; ?>
+
 <?php if($edit_mode): ?>
 <a href="kelola-potensi.php" class="text-primary-600 hover:text-primary-700 font-semibold mb-6 inline-flex items-center gap-2 transition">
     <i class="fas fa-arrow-left"></i> Kembali ke Daftar Potensi
 </a>
 <?php endif; ?>
 
-<!-- Header Halaman (Hanya tampil di mode Tabel/Normal) -->
 <?php if(!$edit_mode): ?>
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
     <div>
@@ -161,20 +192,6 @@ require_once 'layout.php';
 </div>
 <?php endif; ?>
 
-<!-- Alert Messages -->
-<?php if($success): ?>
-<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 flex items-center gap-2 text-sm shadow-sm">
-    <i class="fas fa-check-circle"></i> <?= $success ?>
-</div>
-<?php endif; ?>
-
-<?php if($error): ?>
-<div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 flex items-center gap-2 text-sm shadow-sm">
-    <i class="fas fa-exclamation-circle"></i> <?= $error ?>
-</div>
-<?php endif; ?>
-
-<!-- FORM TAMBAH / EDIT DATA -->
 <div id="form-container" class="<?= $edit_mode ? 'block' : 'hidden' ?> bg-white rounded-2xl shadow-sm border border-gray-100 p-8 mb-8">
     <h2 class="text-xl font-extrabold text-gray-800 mb-8">
         <?= $edit_mode ? 'Edit Data Potensi' : 'Tambah Data Potensi' ?>
@@ -186,7 +203,6 @@ require_once 'layout.php';
             <input type="hidden" name="gambar_lama" value="<?= $data_edit['gambar'] ?>">
         <?php endif; ?>
 
-        <!-- Kategori -->
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Kategori <span class="text-red-500">*</span></label>
             <?php $kategori_aktif = $edit_mode ? cleanText($data_edit['kategori']) : ''; ?>
@@ -198,19 +214,16 @@ require_once 'layout.php';
             </select>
         </div>
         
-        <!-- Judul -->
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Judul Potensi <span class="text-red-500">*</span></label>
             <input type="text" name="judul" value="<?= $edit_mode ? htmlspecialchars(cleanText($data_edit['judul'])) : '' ?>" placeholder="Contoh: Waduk Sari Indah" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" required>
         </div>
 
-        <!-- Deskripsi -->
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Deskripsi Lengkap <span class="text-red-500">*</span></label>
             <textarea name="deskripsi" rows="5" placeholder="Jelaskan secara detail mengenai potensi desa ini..." class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none" required><?= $edit_mode ? htmlspecialchars(cleanText($data_edit['deskripsi'])) : '' ?></textarea>
         </div>
 
-        <!-- Gambar -->
         <div>
             <label class="block text-sm font-semibold text-gray-700 mb-2">
                 Foto Potensi <?= $edit_mode ? '<span class="text-gray-400 font-normal">(opsional)</span>' : '<span class="text-gray-400 font-normal">(opsional)</span>' ?>
@@ -227,7 +240,6 @@ require_once 'layout.php';
             <p class="text-xs text-gray-400 mt-2">Format JPG, PNG, WEBP. Maksimal 5MB.</p>
         </div>
 
-        <!-- Tombol Aksi -->
         <div class="pt-4 flex gap-3">
             <button type="submit" name="<?= $edit_mode ? 'simpan_edit' : 'tambah' ?>" class="px-6 py-3 rounded-xl text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 shadow-sm flex items-center gap-2 transition">
                 <i class="fas fa-save"></i> <?= $edit_mode ? 'Simpan Perubahan' : 'Simpan Data' ?>
@@ -241,7 +253,6 @@ require_once 'layout.php';
     </form>
 </div>
 
-<!-- Tabel Data (Disembunyikan jika sedang Edit Data) -->
 <?php if(!$edit_mode): ?>
 <div id="table-container" class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
@@ -275,7 +286,6 @@ require_once 'layout.php';
                             <?php endif; ?>
                         </td>
                         <td class="py-4 px-5 align-top">
-                            <!-- Perbaikan margin, padding, dan line-height agar badge tidak bertumpuk -->
                             <span class="bg-primary-50 text-primary-700 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-primary-100 tracking-wide uppercase inline-block text-center leading-relaxed">
                                 <?= htmlspecialchars($kategori_bersih) ?>
                             </span>
@@ -289,7 +299,7 @@ require_once 'layout.php';
                                 <a href="?edit=<?= $row['id'] ?>" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition font-semibold text-sm" title="Edit Data">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-                                <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Yakin ingin menghapus potensi <?= addslashes($judul_bersih) ?>?');" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-semibold text-sm" title="Hapus Data">
+                                <a href="#" onclick="konfirmasiHapus('?delete=<?= $row['id'] ?>', '<?= addslashes($judul_bersih) ?>'); return false;" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition font-semibold text-sm" title="Hapus Data">
                                     <i class="fas fa-trash-alt"></i> Hapus
                                 </a>
                             </div>
@@ -328,6 +338,4 @@ function toggleForm() {
 }
 </script>
 
-<?php 
-// Pastikan tidak ada script tambahan yang menabrak tag HTML penutup dari layout.php
-?>
+<?php require_once 'layout-footer.php'; ?>

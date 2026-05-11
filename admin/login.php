@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once '../config/db.php';
 
-// Memeriksa status login dengan lebih aman menghindari error function not found
+// Memeriksa status login dengan lebih aman
 $is_logged_in = false;
 if (function_exists('isAdmin')) {
     $is_logged_in = isAdmin();
@@ -20,7 +20,6 @@ if($is_logged_in) {
 
 $error = '';
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Menggunakan trim() menggantikan clean() agar lebih aman dari error fungsi tidak terdefinisi
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
@@ -34,7 +33,9 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['admin_id'] = $user['id'];
             $_SESSION['admin_name'] = $user['nama_lengkap'] ?? $user['username'];
             
-            // Perbaikan menggunakan header bawaan PHP
+            // FITUR RBAC: Simpan role pengguna ke dalam sesi
+            $_SESSION['admin_role'] = $user['role'] ?? 'staf'; 
+            
             header("Location: dashboard.php");
             exit;
         } else {
@@ -62,25 +63,17 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="min-h-screen hero-bg flex items-center justify-center p-4">
     <div class="w-full max-w-sm">
-        <!-- Logo -->
         <div class="text-center mb-8">
             <div class="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mx-auto mb-3">
                 <i class="fas fa-landmark text-white text-3xl"></i>
             </div>
             <h1 class="text-white font-extrabold text-xl">SID Desa Darmakradenan</h1>
-            <p class="text-green-200 text-sm mt-1">Panel Admin Desa</p>
+            <p class="text-green-200 text-sm mt-1">Panel Admin Terpusat</p>
         </div>
 
-        <!-- Card Login -->
         <div class="bg-white rounded-2xl shadow-2xl p-8">
             <h2 class="text-xl font-extrabold text-gray-800 mb-1">Selamat Datang</h2>
             <p class="text-gray-500 text-sm mb-6">Masuk untuk mengelola data desa</p>
-
-            <?php if($error): ?>
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 flex items-center gap-2 text-sm">
-                <i class="fas fa-exclamation-circle"></i> <?= $error ?>
-            </div>
-            <?php endif; ?>
 
             <form method="POST" action="login.php" class="space-y-4">
                 <div>
@@ -123,9 +116,24 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <p class="text-center text-green-200 text-xs mt-6">
-            Default: admin / password (ubah setelah login pertama)
+            Sistem Informasi Desa Terdistribusi & Aman
         </p>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <?php if($error): ?>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'error',
+            title: 'Login Gagal',
+            text: '<?= $error ?>',
+            confirmButtonColor: '#ef4444',
+            customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+        });
+    });
+    </script>
+    <?php endif; ?>
 
     <script>
     function togglePass() {

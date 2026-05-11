@@ -10,11 +10,9 @@ if (!defined('WA_NUMBER')) {
     define('WA_NUMBER', '6282134655359'); 
 }
 ?>
-<!-- FOOTER -->
 <footer class="bg-primary-900 text-white mt-16">
     <div class="max-w-6xl mx-auto px-4 py-10">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Tentang -->
             <div>
                 <div class="flex items-center gap-2 mb-4">
                     <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center shadow-sm">
@@ -27,7 +25,6 @@ if (!defined('WA_NUMBER')) {
                 </p>
             </div>
             
-            <!-- Link Cepat -->
             <div>
                 <h4 class="font-semibold mb-4 text-primary-100">Layanan Cepat</h4>
                 <ul class="space-y-2 text-sm text-primary-300">
@@ -38,7 +35,6 @@ if (!defined('WA_NUMBER')) {
                 </ul>
             </div>
             
-            <!-- Kontak -->
             <div>
                 <h4 class="font-semibold mb-4 text-primary-100">Kontak Desa</h4>
                 <ul class="space-y-2 text-sm text-primary-300">
@@ -58,12 +54,39 @@ if (!defined('WA_NUMBER')) {
     </div>
 </footer>
 
-<!-- WhatsApp Float Button -->
 <a href="https://wa.me/<?= WA_NUMBER ?>?text=Halo+Admin+Desa+Darmakradenan" target="_blank"
    class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 focus:outline-none focus:ring-4 focus:ring-green-300"
    title="Chat via WhatsApp">
     <i class="fab fa-whatsapp text-3xl"></i>
 </a>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Fungsi Global untuk Konfirmasi Hapus Data
+function konfirmasiHapus(url, namaData) {
+    Swal.fire({
+        title: 'Hapus Data?',
+        text: `Anda yakin ingin menghapus "${namaData}"? Data yang sudah dihapus tidak bisa dikembalikan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444', // Merah Tailwind untuk Hapus
+        cancelButtonColor: '#6b7280', // Abu-abu Tailwind untuk Batal
+        confirmButtonText: '<i class="fas fa-trash"></i> Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        reverseButtons: true, // Memindahkan tombol batal ke sebelah kanan
+        customClass: {
+            confirmButton: 'rounded-xl px-4 py-2 font-bold shadow-sm',
+            cancelButton: 'rounded-xl px-4 py-2 font-bold shadow-sm'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Jika dikonfirmasi, redirect ke link penghapusan
+            window.location.href = url;
+        }
+    });
+}
+</script>
 
 </body>
 </html>

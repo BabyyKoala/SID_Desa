@@ -49,13 +49,32 @@ function badgeStatus($s) {
 ?>
 
 <?php if(isset($_GET['msg'])): ?>
-<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
-    <i class="fas fa-check-circle"></i>
-    <?= $_GET['msg'] === 'updated' ? 'Status berhasil diperbarui.' : 'Data berhasil dihapus.' ?>
-</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let msg = '<?= $_GET['msg'] ?>';
+    let pesan = '';
+    if(msg === 'updated') pesan = 'Status surat berhasil diperbarui!';
+    else if(msg === 'deleted') pesan = 'Data pengajuan berhasil dihapus!';
+
+    if(pesan) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: pesan,
+            confirmButtonColor: '#059669',
+            customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+        }).then(() => {
+            if(window.location.search.includes('msg=')) {
+                const url = new URL(window.location);
+                url.searchParams.delete('msg');
+                window.history.replaceState(null, null, url.pathname + url.search);
+            }
+        });
+    }
+});
+</script>
 <?php endif; ?>
 
-<!-- Filter & Search -->
 <div class="flex flex-wrap gap-3 mb-6">
     <form method="GET" class="flex gap-2 flex-1 min-w-0">
         <input type="text" name="q" value="<?= htmlspecialchars($search) ?>"
@@ -77,7 +96,6 @@ function badgeStatus($s) {
     </div>
 </div>
 
-<!-- Table (Desktop) -->
 <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <table class="w-full text-sm">
         <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
@@ -126,12 +144,22 @@ function badgeStatus($s) {
                         </select>
                     </form>
                 </td>
-                <td class="px-5 py-3 text-center">
-                    <a href="?delete=<?= $row['id'] ?>" 
-                       onclick="return confirm('Hapus data pengajuan surat ini?')"
-                       class="text-red-500 hover:text-red-700 text-xs font-semibold bg-red-50 hover:bg-red-100 p-2 rounded-lg transition inline-flex items-center justify-center">
-                        <i class="fas fa-trash"></i>
-                    </a>
+                <td class="px-5 py-3">
+                    <div class="flex items-center justify-center gap-2">
+                        <?php if($row['status'] == 'Selesai'): ?>
+                        <a href="cetak-surat.php?id=<?= $row['id'] ?>" target="_blank" title="Cetak Surat PDF"
+                           class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-blue-200">
+                            <i class="fas fa-print"></i> Cetak
+                        </a>
+                        <?php endif; ?>
+                        
+                        <a href="#" 
+                           onclick="konfirmasiHapus('?delete=<?= $row['id'] ?>', 'Pengajuan surat dari <?= addslashes(htmlspecialchars($row['nama'])) ?>'); return false;"
+                           title="Hapus Data"
+                           class="text-red-500 hover:text-red-700 text-xs font-semibold bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition inline-flex items-center justify-center border border-red-100">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>
             <?php endforeach; endif; ?>
@@ -139,7 +167,6 @@ function badgeStatus($s) {
     </table>
 </div>
 
-<!-- Mobile Cards -->
 <div class="md:hidden space-y-3">
     <?php if(empty($rows)): ?>
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">
@@ -154,23 +181,32 @@ function badgeStatus($s) {
                 <div class="font-bold text-gray-800"><?= htmlspecialchars($row['nama']) ?></div>
                 <div class="text-xs text-gray-400"><?= $row['nik'] ?></div>
             </div>
-            <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Hapus pengajuan ini?')" class="text-red-400 hover:text-red-600 text-sm bg-red-50 p-2 rounded-lg">
+            <a href="#" onclick="konfirmasiHapus('?delete=<?= $row['id'] ?>', 'Pengajuan surat dari <?= addslashes(htmlspecialchars($row['nama'])) ?>'); return false;" class="text-red-400 hover:text-red-600 text-sm bg-red-50 p-2 rounded-lg">
                 <i class="fas fa-trash"></i>
             </a>
         </div>
         <div class="text-sm text-gray-600 font-medium mb-1"><?= htmlspecialchars($row['jenis_surat']) ?></div>
         <div class="text-xs text-gray-400 mb-3"><?= isset($row['tanggal']) ? date('d M Y, H:i', strtotime($row['tanggal'])) : '' ?></div>
-        <form method="POST" action="kelola-surat.php" class="flex items-center gap-2 border-t border-gray-100 pt-3">
-            <input type="hidden" name="id" value="<?= $row['id'] ?>">
-            <input type="hidden" name="update_status" value="1">
-            <label class="text-xs text-gray-500 font-semibold">Status:</label>
-            <select name="status" onchange="this.form.submit()" 
-                    class="text-xs font-semibold px-3 py-1.5 rounded-full focus:outline-none <?= badgeStatus($row['status']) ?>">
-                <option value="Diproses" <?= $row['status']=='Diproses'?'selected':'' ?>>Diproses</option>
-                <option value="Selesai"  <?= $row['status']=='Selesai'?'selected':'' ?>>Selesai</option>
-                <option value="Ditolak"  <?= $row['status']=='Ditolak'?'selected':'' ?>>Ditolak</option>
-            </select>
-        </form>
+        
+        <div class="flex items-center justify-between border-t border-gray-100 pt-3">
+            <form method="POST" action="kelola-surat.php" class="flex items-center gap-2">
+                <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                <input type="hidden" name="update_status" value="1">
+                <select name="status" onchange="this.form.submit()" 
+                        class="text-xs font-semibold px-3 py-1.5 rounded-full focus:outline-none <?= badgeStatus($row['status']) ?>">
+                    <option value="Diproses" <?= $row['status']=='Diproses'?'selected':'' ?>>Diproses</option>
+                    <option value="Selesai"  <?= $row['status']=='Selesai'?'selected':'' ?>>Selesai</option>
+                    <option value="Ditolak"  <?= $row['status']=='Ditolak'?'selected':'' ?>>Ditolak</option>
+                </select>
+            </form>
+            
+            <?php if($row['status'] == 'Selesai'): ?>
+            <a href="cetak-surat.php?id=<?= $row['id'] ?>" target="_blank"
+               class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 border border-blue-200">
+                <i class="fas fa-print"></i> Cetak
+            </a>
+            <?php endif; ?>
+        </div>
     </div>
     <?php endforeach; endif; ?>
 </div>

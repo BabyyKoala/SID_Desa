@@ -55,8 +55,21 @@ function badgeStatus($status) {
 }
 ?>
 
+<?php if($searched && (!$result || $result->num_rows === 0)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    Swal.fire({
+        icon: 'error',
+        title: 'Tidak Ditemukan',
+        text: 'Kode pengajuan atau NIK yang Anda masukkan tidak terdaftar dalam sistem kami. Silakan periksa kembali.',
+        confirmButtonColor: '#3b82f6', // blue-500 menyesuaikan tema halaman ini
+        customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+    });
+});
+</script>
+<?php endif; ?>
+
 <div class="max-w-2xl mx-auto px-4 py-10 min-h-[70vh]">
-    <!-- Breadcrumb -->
     <div class="text-sm text-gray-500 mb-6 flex items-center gap-2">
         <a href="../index.php" class="hover:text-primary-600 transition">Beranda</a>
         <i class="fas fa-chevron-right text-[10px]"></i>
@@ -64,7 +77,6 @@ function badgeStatus($status) {
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <!-- Header -->
         <div class="bg-gradient-to-r from-blue-600 to-blue-500 p-6 text-white">
             <div class="flex items-center gap-3">
                 <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center shadow-sm">
@@ -78,7 +90,6 @@ function badgeStatus($status) {
         </div>
 
         <div class="p-6 md:p-8">
-            <!-- Form Pencarian -->
             <form method="GET" action="cek-status.php" class="flex flex-col sm:flex-row gap-3 mb-6">
                 <input type="text" name="kode"
                        value="<?= htmlspecialchars($_GET['kode'] ?? $_GET['nik'] ?? '') ?>"
@@ -92,7 +103,6 @@ function badgeStatus($status) {
                 </button>
             </form>
 
-            <!-- Results -->
             <?php if($searched): ?>
                 <?php if($result && $result->num_rows > 0): ?>
                     <div class="space-y-4 mt-8">
@@ -145,7 +155,6 @@ function badgeStatus($status) {
                             </div>
                             <?php endif; ?>
 
-                            <!-- Perbaikan pesan template WhatsApp -->
                             <a href="https://wa.me/<?= WA_NUMBER ?>?text=Halo+Admin+Desa+Darmakradenan,+saya+ingin+menanyakan+status+surat+dengan+kode+*<?= htmlspecialchars($row['kode_pengajuan']) ?>*+atas+nama+*<?= urlencode($row['nama']) ?>*.+Terima+kasih."
                                target="_blank"
                                class="mt-4 w-full flex items-center justify-center gap-2 text-sm bg-white border border-green-200 text-green-600 px-4 py-3 rounded-lg hover:bg-green-50 hover:text-green-700 transition font-semibold shadow-sm">
@@ -167,7 +176,6 @@ function badgeStatus($status) {
                 </div>
                 <?php endif; ?>
             <?php else: ?>
-            <!-- Empty State -->
             <div class="text-center py-10 mt-2">
                 <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-receipt text-3xl text-blue-400"></i>
@@ -179,7 +187,6 @@ function badgeStatus($status) {
         </div>
     </div>
 
-    <!-- Belum punya kode? -->
     <div class="mt-8 text-center bg-gray-50 rounded-xl p-4 border border-gray-100">
         <p class="text-sm text-gray-500 inline-block mr-2">Belum mengajukan surat permohonan?</p>
         <a href="ajukan-surat.php" class="text-primary-600 font-bold text-sm hover:text-primary-700 hover:underline transition">Ajukan sekarang &rarr;</a>

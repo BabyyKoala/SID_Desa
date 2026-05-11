@@ -30,13 +30,28 @@ require_once 'layout.php';
 ?>
 
 <?php if(isset($_GET['msg'])): ?>
-<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
-    <i class="fas fa-check-circle"></i>
-    <?= $_GET['msg'] === 'updated' ? 'Status pengaduan berhasil diperbarui.' : 'Data pengaduan berhasil dihapus.' ?>
-</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let msg = '<?= $_GET['msg'] ?>';
+    let pesan = '';
+    if(msg === 'updated') pesan = 'Status pengaduan berhasil diperbarui!';
+    else if(msg === 'deleted') pesan = 'Data pengaduan berhasil dihapus!';
+
+    if(pesan) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: pesan,
+            confirmButtonColor: '#059669',
+            customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+        }).then(() => {
+            window.history.replaceState(null, null, window.location.pathname);
+        });
+    }
+});
+</script>
 <?php endif; ?>
 
-<!-- Filter -->
 <div class="flex gap-2 mb-6 flex-wrap">
     <?php foreach([''=>'Semua','Masuk'=>'Baru','Diproses'=>'Diproses','Selesai'=>'Selesai'] as $v=>$l): ?>
     <a href="?status=<?= $v ?>"
@@ -69,13 +84,12 @@ require_once 'layout.php';
                 </div>
                 <div>
                     <div class="font-bold text-gray-800"><?= htmlspecialchars($row['nama']) ?></div>
-                    <!-- Memastikan formatTanggal ada, jika error ubah ke echo $row['tanggal'] -->
                     <div class="text-xs text-gray-400"><?= isset($row['tanggal']) ? $row['tanggal'] : '' ?></div>
                 </div>
             </div>
             <div class="flex items-center gap-2">
                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold border <?= $badge ?>"><?= $row['status'] ?></span>
-                <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Hapus pengaduan ini secara permanen?')" 
+                <a href="#" onclick="konfirmasiHapus('?delete=<?= $row['id'] ?>', 'Pengaduan dari <?= addslashes(htmlspecialchars($row['nama'])) ?>'); return false;" 
                    class="text-red-400 hover:text-red-600 text-sm bg-red-50 hover:bg-red-100 p-2 rounded-lg transition">
                     <i class="fas fa-trash"></i>
                 </a>

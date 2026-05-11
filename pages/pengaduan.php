@@ -20,7 +20,7 @@ $error = '';
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nama = clean($_POST['nama'] ?? '');
     $isi  = clean($_POST['isi'] ?? '');
-    $foto = null; // Set default null agar database menerima jika tidak ada foto
+    $foto = null;
 
     if(!$nama || !$isi) {
         $error = 'Nama dan isi laporan wajib diisi.';
@@ -31,25 +31,20 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             $allowed = ['jpg','jpeg','png','gif','webp'];
             
             if(!in_array($ext, $allowed)) {
-                $error = 'Format foto tidak didukung. Gunakan JPG, PNG, WEBP, atau GIF.';
+                $error = 'Format foto tidak didukung. Gunakan JPG, PNG, atau WEBP.';
             } elseif($_FILES['foto']['size'] > 5 * 1024 * 1024) {
                 $error = 'Ukuran foto maksimal 5MB.';
             } else {
-                // Buat folder otomatis jika belum ada
                 if (!is_dir('../uploads/pengaduan')) { 
                     mkdir('../uploads/pengaduan', 0777, true); 
                 }
-                
-                // Beri nama unik agar tidak bentrok
                 $foto = 'pengaduan_' . time() . '_' . uniqid() . '.' . $ext;
-                
                 if(!move_uploaded_file($_FILES['foto']['tmp_name'], '../uploads/pengaduan/' . $foto)) {
-                    $error = 'Gagal mengunggah foto ke server. Periksa izin folder.';
+                    $error = 'Gagal mengunggah foto. Periksa izin folder.';
                 }
             }
         }
 
-        // Jika tidak ada error validasi atau error upload, masukkan ke database
         if(!$error) {
             $stmt = $conn->prepare("INSERT INTO pengaduan (nama, isi, foto) VALUES (?, ?, ?)");
             $stmt->bind_param("sss", $nama, $isi, $foto);
@@ -57,8 +52,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
             if($stmt->execute()) {
                 $success = true;
             } else {
-                // Menampilkan pesan error spesifik jika database menolak (berguna untuk debugging)
-                $error = 'Terjadi kesalahan database: ' . $conn->error;
+                $error = 'Kesalahan Database: ' . $conn->error;
             }
         }
     }
@@ -66,6 +60,30 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require_once '../config/header.php';
 ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    <?php if($success): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Laporan Terkirim!',
+        text: 'Terima kasih atas partisipasi Anda. Laporan akan segera kami verifikasi.',
+        confirmButtonColor: '#f97316', // warna orange-500
+        customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+    });
+    <?php endif; ?>
+
+    <?php if($error): ?>
+    Swal.fire({
+        icon: 'error',
+        title: 'Ups!',
+        text: '<?= $error ?>',
+        confirmButtonColor: '#ef4444',
+        customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+    });
+    <?php endif; ?>
+});
+</script>
 
 <div class="max-w-2xl mx-auto px-4 py-10 min-h-[70vh]">
     <div class="text-sm text-gray-500 mb-6 flex items-center gap-2">
@@ -81,8 +99,8 @@ require_once '../config/header.php';
                     <i class="fas fa-comment-dots text-2xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold">Laporan Pengaduan</h1>
-                    <p class="text-orange-100 text-sm">Suara Anda penting bagi kemajuan desa kami</p>
+                    <h1 class="text-xl font-extrabold">Suara Masyarakat</h1>
+                    <p class="text-orange-100 text-sm">Lapor setiap kendala untuk perbaikan desa</p>
                 </div>
             </div>
         </div>
@@ -90,11 +108,11 @@ require_once '../config/header.php';
         <div class="p-6 md:p-8">
             <?php if($success): ?>
             <div class="text-center py-8">
-                <div class="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
-                    <i class="fas fa-check-circle text-4xl text-primary-600"></i>
+                <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                    <i class="fas fa-check-circle text-4xl text-orange-600"></i>
                 </div>
-                <h2 class="text-xl font-extrabold text-gray-800 mb-2">Laporan Terkirim!</h2>
-                <p class="text-gray-500 mb-6">Terima kasih atas laporan Anda. Perangkat desa akan segera menindaklanjuti pengaduan ini.</p>
+                <h2 class="text-xl font-extrabold text-gray-800 mb-2">Terima Kasih!</h2>
+                <p class="text-gray-500 mb-6">Laporan Anda atas nama <strong><?= htmlspecialchars($_POST['nama']) ?></strong> telah masuk ke sistem kami.</p>
                 
                 <a href="https://wa.me/<?= WA_NUMBER ?>?text=Halo+Admin+Desa+Darmakradenan,+saya+baru+saja+mengirim+laporan+pengaduan+melalui+website+atas+nama+*<?= urlencode($_POST['nama'] ?? '') ?>*.+Mohon+ditindaklanjuti.+Terima+kasih." 
                    target="_blank"
@@ -102,29 +120,24 @@ require_once '../config/header.php';
                     <i class="fab fa-whatsapp text-lg"></i> Konfirmasi via WhatsApp
                 </a>
                 <br>
-                <a href="pengaduan.php" class="inline-block mt-4 text-sm text-primary-600 hover:text-primary-700 hover:underline transition font-medium">Kirim laporan lain</a>
+                <a href="pengaduan.php" class="inline-block mt-4 text-sm text-primary-600 hover:text-primary-700 hover:underline transition font-medium">Buat laporan baru</a>
             </div>
 
             <?php else: ?>
-            <?php if($error): ?>
-            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
-                <i class="fas fa-exclamation-circle"></i> <?= $error ?>
-            </div>
-            <?php endif; ?>
 
             <p class="text-gray-500 text-sm mb-6 leading-relaxed">
-                Isi form di bawah untuk menyampaikan pengaduan, masukan, atau saran kepada perangkat Desa Darmakradenan. Identitas Anda dapat disamarkan jika diperlukan.
+                Silakan sampaikan pengaduan, kritik, atau saran Anda dengan jujur dan bertanggung jawab. Identitas Anda dapat kami rahasiakan.
             </p>
 
             <form method="POST" action="pengaduan.php" enctype="multipart/form-data" class="space-y-5">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                        Nama <span class="text-red-500">*</span>
+                        Nama / Identitas <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="nama"
                            value="<?= htmlspecialchars($_POST['nama'] ?? '') ?>"
-                           placeholder="Nama lengkap Anda (boleh diisi Hamba Allah/Anonim)"
-                           class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition"
+                           placeholder="Boleh isi nama asli atau Anonim"
+                           class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
                            required>
                 </div>
 
@@ -133,39 +146,30 @@ require_once '../config/header.php';
                         Isi Laporan <span class="text-red-500">*</span>
                     </label>
                     <textarea name="isi" rows="5"
-                              placeholder="Tuliskan laporan, pengaduan, atau saran Anda dengan jelas dan detail..."
-                              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none transition"
+                              placeholder="Detail laporan (Lokasi, Kejadian, Harapan)..."
+                              class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none transition"
                               required><?= htmlspecialchars($_POST['isi'] ?? '') ?></textarea>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                        Foto Pendukung <span class="text-gray-400 font-normal">(opsional)</span>
+                        Lampiran Foto <span class="text-gray-400 font-normal">(opsional)</span>
                     </label>
                     <div class="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-orange-300 hover:bg-orange-50 transition cursor-pointer" 
                          onclick="document.getElementById('foto').click()">
                         <i class="fas fa-camera text-2xl text-gray-300 mb-2"></i>
-                        <p class="text-sm text-gray-500 font-medium">Klik untuk memilih foto</p>
-                        <p class="text-xs text-gray-400 mt-0.5">Format JPG, PNG, maksimal 5MB</p>
+                        <p class="text-sm text-gray-500 font-medium">Ketuk untuk pilih foto</p>
+                        <p class="text-xs text-gray-400 mt-0.5">JPG/PNG/WEBP, Maks. 5MB</p>
                         <div id="foto-preview" class="hidden mt-4 pt-4 border-t border-gray-100">
-                            <img id="preview-img" src="" class="max-h-32 rounded-lg mx-auto shadow-sm" alt="Preview Foto">
-                            <p id="foto-name" class="text-xs text-gray-500 mt-2 font-medium"></p>
+                            <img id="preview-img" src="" class="max-h-32 rounded-lg mx-auto shadow-sm" alt="Preview">
                         </div>
                     </div>
-                    <input type="file" id="foto" name="foto" accept="image/jpeg, image/png, image/webp" class="hidden"
-                           onchange="previewFoto(this)">
-                </div>
-
-                <div class="bg-orange-50 border border-orange-100 rounded-xl p-4 flex items-start gap-3 text-sm">
-                    <i class="fas fa-shield-alt text-orange-500 mt-0.5 shrink-0"></i>
-                    <div class="text-orange-800 leading-relaxed">
-                        Pengaduan Anda bersifat rahasia dan hanya dapat diakses oleh perangkat desa yang berwenang.
-                    </div>
+                    <input type="file" id="foto" name="foto" accept="image/*" class="hidden" onchange="previewFoto(this)">
                 </div>
 
                 <div class="pt-2">
                     <button type="submit" 
-                            class="w-full bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-base transition shadow-md hover:shadow-lg">
+                            class="w-full bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 text-base transition shadow-md">
                         <i class="fas fa-paper-plane"></i> Kirim Laporan
                     </button>
                 </div>
@@ -181,7 +185,6 @@ function previewFoto(input) {
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('preview-img').src = e.target.result;
-            document.getElementById('foto-name').textContent = input.files[0].name;
             document.getElementById('foto-preview').classList.remove('hidden');
         }
         reader.readAsDataURL(input.files[0]);

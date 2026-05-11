@@ -5,89 +5,118 @@ $page_title = 'Kelola Transparansi';
 
 $tab = $_GET['tab'] ?? 'apbdes';
 
-// ===== APBDes CRUD =====
-if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_apbdes'])) {
-    $tahun    = (int)$_POST['tahun'];
-    $kategori = in_array($_POST['kategori'], ['Pendapatan','Pengeluaran']) ? $_POST['kategori'] : 'Pendapatan';
-    // Menggunakan trim() menggantikan clean() untuk mencegah double-encoding
-    $uraian   = trim($_POST['uraian'] ?? '');
-    $jumlah   = (int)str_replace(['.',',',' '], '', $_POST['jumlah'] ?? 0);
-    $id       = (int)($_POST['id'] ?? 0);
+// FITUR RBAC: Cek apakah user yang login adalah Kepala Desa (Read-Only Mode)
+$is_read_only = isset($_SESSION['admin_role']) && $_SESSION['admin_role'] === 'kepala_desa';
 
-    if($uraian && $jumlah && $tahun) {
-        if($id) {
-            $stmt = $conn->prepare("UPDATE apbdes SET tahun=?, kategori=?, uraian=?, jumlah=? WHERE id=?");
-            $stmt->bind_param("issii", $tahun, $kategori, $uraian, $jumlah, $id);
-        } else {
-            $stmt = $conn->prepare("INSERT INTO apbdes (tahun, kategori, uraian, jumlah) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("issi", $tahun, $kategori, $uraian, $jumlah);
+// ==========================================
+// BACKEND SECURITY: Mencegah eksekusi form jika Read-Only
+// ==========================================
+if (!$is_read_only) {
+    
+    // ===== APBDes CRUD =====
+    if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_apbdes'])) {
+        $tahun    = (int)$_POST['tahun'];
+        $kategori = in_array($_POST['kategori'], ['Pendapatan','Pengeluaran']) ? $_POST['kategori'] : 'Pendapatan';
+        $uraian   = trim($_POST['uraian'] ?? '');
+        $jumlah   = (int)str_replace(['.',',',' '], '', $_POST['jumlah'] ?? 0);
+        $id       = (int)($_POST['id'] ?? 0);
+
+        if($uraian && $jumlah && $tahun) {
+            if($id) {
+                $stmt = $conn->prepare("UPDATE apbdes SET tahun=?, kategori=?, uraian=?, jumlah=? WHERE id=?");
+                $stmt->bind_param("issii", $tahun, $kategori, $uraian, $jumlah, $id);
+            } else {
+                $stmt = $conn->prepare("INSERT INTO apbdes (tahun, kategori, uraian, jumlah) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("issi", $tahun, $kategori, $uraian, $jumlah);
+            }
+            $stmt->execute();
         }
-        $stmt->execute();
+        header("Location: kelola-transparansi.php?tab=apbdes&msg=saved");
+        exit;
     }
-    header("Location: kelola-transparansi.php?tab=apbdes&msg=saved");
-    exit;
-}
 
-if(isset($_GET['del_apbdes'])) {
-    $id = (int)$_GET['del_apbdes'];
-    $conn->query("DELETE FROM apbdes WHERE id=$id");
-    header("Location: kelola-transparansi.php?tab=apbdes&msg=deleted");
-    exit;
-}
+    if(isset($_GET['del_apbdes'])) {
+        $id = (int)$_GET['del_apbdes'];
+        $conn->query("DELETE FROM apbdes WHERE id=$id");
+        header("Location: kelola-transparansi.php?tab=apbdes&msg=deleted");
+        exit;
+    }
 
-// ===== Program Desa CRUD =====
-if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_program'])) {
-    // Menggunakan trim() menggantikan clean()
-    $nama   = trim($_POST['nama_program'] ?? '');
-    $desk   = trim($_POST['deskripsi'] ?? '');
-    $status = in_array($_POST['status'], ['Perencanaan','Berjalan','Selesai']) ? $_POST['status'] : 'Perencanaan';
-    $id     = (int)($_POST['id'] ?? 0);
+    // ===== Program Desa CRUD =====
+    if($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_program'])) {
+        $nama   = trim($_POST['nama_program'] ?? '');
+        $desk   = trim($_POST['deskripsi'] ?? '');
+        $status = in_array($_POST['status'], ['Perencanaan','Berjalan','Selesai']) ? $_POST['status'] : 'Perencanaan';
+        $id     = (int)($_POST['id'] ?? 0);
 
-    if($nama) {
-        if($id) {
-            $stmt = $conn->prepare("UPDATE program_desa SET nama_program=?, deskripsi=?, status=? WHERE id=?");
-            $stmt->bind_param("sssi", $nama, $desk, $status, $id);
-        } else {
-            $stmt = $conn->prepare("INSERT INTO program_desa (nama_program, deskripsi, status) VALUES (?, ?, ?)");
-            $stmt->bind_param("sss", $nama, $desk, $status);
+        if($nama) {
+            if($id) {
+                $stmt = $conn->prepare("UPDATE program_desa SET nama_program=?, deskripsi=?, status=? WHERE id=?");
+                $stmt->bind_param("sssi", $nama, $desk, $status, $id);
+            } else {
+                $stmt = $conn->prepare("INSERT INTO program_desa (nama_program, deskripsi, status) VALUES (?, ?, ?)");
+                $stmt->bind_param("sss", $nama, $desk, $status);
+            }
+            $stmt->execute();
         }
-        $stmt->execute();
+        header("Location: kelola-transparansi.php?tab=program&msg=saved");
+        exit;
     }
-    header("Location: kelola-transparansi.php?tab=program&msg=saved");
-    exit;
-}
 
-if(isset($_GET['del_program'])) {
-    $id = (int)$_GET['del_program'];
-    $conn->query("DELETE FROM program_desa WHERE id=$id");
-    header("Location: kelola-transparansi.php?tab=program&msg=deleted");
-    exit;
+    if(isset($_GET['del_program'])) {
+        $id = (int)$_GET['del_program'];
+        $conn->query("DELETE FROM program_desa WHERE id=$id");
+        header("Location: kelola-transparansi.php?tab=program&msg=deleted");
+        exit;
+    }
 }
+// ==========================================
 
 $apbdes  = $conn->query("SELECT * FROM apbdes ORDER BY tahun DESC, kategori, id");
 $program = $conn->query("SELECT * FROM program_desa ORDER BY FIELD(status,'Berjalan','Perencanaan','Selesai'), id DESC");
 
-// Edit data
+// Edit data (Hanya berjalan jika bukan Read-Only)
 $edit_apbdes  = null;
 $edit_program = null;
-if(isset($_GET['edit_apbdes'])) {
-    $edit_apbdes = $conn->query("SELECT * FROM apbdes WHERE id=".(int)$_GET['edit_apbdes'])->fetch_assoc();
-}
-if(isset($_GET['edit_program'])) {
-    $edit_program = $conn->query("SELECT * FROM program_desa WHERE id=".(int)$_GET['edit_program'])->fetch_assoc();
+if(!$is_read_only) {
+    if(isset($_GET['edit_apbdes'])) {
+        $edit_apbdes = $conn->query("SELECT * FROM apbdes WHERE id=".(int)$_GET['edit_apbdes'])->fetch_assoc();
+    }
+    if(isset($_GET['edit_program'])) {
+        $edit_program = $conn->query("SELECT * FROM program_desa WHERE id=".(int)$_GET['edit_program'])->fetch_assoc();
+    }
 }
 
 require_once 'layout.php';
 ?>
 
 <?php if(isset($_GET['msg'])): ?>
-<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
-    <i class="fas fa-check-circle"></i>
-    <?= $_GET['msg'] === 'saved' ? 'Data berhasil disimpan.' : 'Data berhasil dihapus.' ?>
-</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let msg = '<?= $_GET['msg'] ?>';
+    let pesan = '';
+    if(msg === 'saved') pesan = 'Data berhasil disimpan!';
+    else if(msg === 'deleted') pesan = 'Data berhasil dihapus!';
+
+    if(pesan) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: pesan,
+            confirmButtonColor: '#059669',
+            customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+        }).then(() => {
+            if(window.location.search.includes('msg=')) {
+                const url = new URL(window.location);
+                url.searchParams.delete('msg');
+                window.history.replaceState(null, null, url.pathname + url.search);
+            }
+        });
+    }
+});
+</script>
 <?php endif; ?>
 
-<!-- Tabs -->
 <div class="flex gap-3 mb-6">
     <a href="?tab=apbdes" class="px-5 py-2.5 rounded-xl text-sm font-semibold border transition
        <?= $tab === 'apbdes' ? 'bg-green-600 text-white border-green-600 shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' ?>">
@@ -100,8 +129,9 @@ require_once 'layout.php';
 </div>
 
 <?php if($tab === 'apbdes'): ?>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Form APBDes -->
+<div class="grid grid-cols-1 <?= !$is_read_only ? 'lg:grid-cols-3' : '' ?> gap-6">
+    
+    <?php if(!$is_read_only): ?>
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-fit">
         <h3 class="font-bold text-gray-800 mb-4">
             <?= $edit_apbdes ? 'Edit Data APBDes' : 'Tambah Data APBDes' ?>
@@ -149,9 +179,9 @@ require_once 'layout.php';
             </div>
         </form>
     </div>
+    <?php endif; ?>
 
-    <!-- Tabel APBDes -->
-    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="<?= !$is_read_only ? 'lg:col-span-2' : '' ?> bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <table class="w-full text-sm">
             <thead class="bg-gray-50 text-xs text-gray-500 uppercase">
                 <tr>
@@ -159,7 +189,7 @@ require_once 'layout.php';
                     <th class="px-4 py-3 text-left">Kategori</th>
                     <th class="px-4 py-3 text-left">Uraian</th>
                     <th class="px-4 py-3 text-right">Jumlah</th>
-                    <th class="px-4 py-3 text-center">Aksi</th>
+                    <?php if(!$is_read_only): ?><th class="px-4 py-3 text-center">Aksi</th><?php endif; ?>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-50">
@@ -172,19 +202,21 @@ require_once 'layout.php';
                         </span>
                     </td>
                     <td class="px-4 py-3 text-gray-600 text-xs"><?= htmlspecialchars($row['uraian']) ?></td>
-                    <!-- Pastikan fungsi formatRupiah ada di db.php -->
                     <td class="px-4 py-3 text-right font-semibold text-gray-800 text-xs whitespace-nowrap"><?= isset($row['jumlah']) ? 'Rp '.number_format($row['jumlah'], 0, ',', '.') : '' ?></td>
+                    
+                    <?php if(!$is_read_only): ?>
                     <td class="px-4 py-3 text-center">
                         <div class="flex gap-2 justify-center">
                             <a href="?tab=apbdes&edit_apbdes=<?= $row['id'] ?>" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition"><i class="fas fa-edit"></i></a>
-                            <a href="?tab=apbdes&del_apbdes=<?= $row['id'] ?>" onclick="return confirm('Hapus data APBDes ini?')" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition"><i class="fas fa-trash"></i></a>
+                            <a href="#" onclick="konfirmasiHapus('?tab=apbdes&del_apbdes=<?= $row['id'] ?>', 'Data APBDes: <?= addslashes(htmlspecialchars($row['uraian'])) ?>'); return false;" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition"><i class="fas fa-trash"></i></a>
                         </div>
                     </td>
+                    <?php endif; ?>
                 </tr>
                 <?php endwhile; ?>
                 <?php if($apbdes->num_rows === 0): ?>
                 <tr>
-                    <td colspan="5" class="px-4 py-8 text-center text-gray-400 text-sm">Belum ada data APBDes yang ditambahkan.</td>
+                    <td colspan="<?= !$is_read_only ? '5' : '4' ?>" class="px-4 py-8 text-center text-gray-400 text-sm">Belum ada data APBDes yang ditambahkan.</td>
                 </tr>
                 <?php endif; ?>
             </tbody>
@@ -193,8 +225,9 @@ require_once 'layout.php';
 </div>
 
 <?php elseif($tab === 'program'): ?>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Form Program -->
+<div class="grid grid-cols-1 <?= !$is_read_only ? 'lg:grid-cols-3' : '' ?> gap-6">
+    
+    <?php if(!$is_read_only): ?>
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-fit">
         <h3 class="font-bold text-gray-800 mb-4"><?= $edit_program ? 'Edit Program' : 'Tambah Program' ?></h3>
         <form method="POST" action="?tab=program" class="space-y-4">
@@ -232,11 +265,10 @@ require_once 'layout.php';
             </div>
         </form>
     </div>
+    <?php endif; ?>
 
-    <!-- List Program -->
-    <div class="lg:col-span-2 space-y-3">
+    <div class="<?= !$is_read_only ? 'lg:col-span-2' : '' ?> space-y-3">
         <?php while($row = $program->fetch_assoc()): 
-            // Mengubah custom class menjadi class bawaan Tailwind agar pasti muncul warnanya
             $badge = [
                 'Perencanaan' => 'bg-yellow-100 text-yellow-700 border-yellow-200',
                 'Berjalan'    => 'bg-blue-100 text-blue-700 border-blue-200',
@@ -254,12 +286,16 @@ require_once 'layout.php';
                 <p class="text-xs text-gray-500 leading-relaxed"><?= htmlspecialchars($row['deskripsi']) ?></p>
                 <?php endif; ?>
             </div>
+            
+            <?php if(!$is_read_only): ?>
             <div class="flex gap-2 flex-shrink-0">
                 <a href="?tab=program&edit_program=<?= $row['id'] ?>" class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition"><i class="fas fa-edit"></i></a>
-                <a href="?tab=program&del_program=<?= $row['id'] ?>" onclick="return confirm('Hapus program ini?')" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition"><i class="fas fa-trash"></i></a>
+                <a href="#" onclick="konfirmasiHapus('?tab=program&del_program=<?= $row['id'] ?>', 'Program: <?= addslashes(htmlspecialchars($row['nama_program'])) ?>'); return false;" class="bg-red-50 text-red-600 hover:bg-red-100 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition"><i class="fas fa-trash"></i></a>
             </div>
+            <?php endif; ?>
         </div>
         <?php endwhile; ?>
+        
         <?php if($program->num_rows === 0): ?>
         <div class="text-center py-16 text-gray-400 bg-white rounded-xl border border-gray-100 border-dashed">
             <i class="fas fa-tasks text-3xl mb-3 text-gray-300"></i>

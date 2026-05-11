@@ -74,10 +74,26 @@ require_once 'layout.php';
 ?>
 
 <?php if(isset($_GET['msg'])): ?>
-<div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-5 flex items-center gap-2 text-sm">
-    <i class="fas fa-check-circle"></i>
-    <?= $_GET['msg'] === 'saved' ? 'Data perangkat berhasil disimpan.' : 'Data perangkat berhasil dihapus.' ?>
-</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let msg = '<?= $_GET['msg'] ?>';
+    let pesan = '';
+    if(msg === 'saved') pesan = 'Data perangkat berhasil disimpan!';
+    else if(msg === 'deleted') pesan = 'Data perangkat berhasil dihapus!';
+
+    if(pesan) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil',
+            text: pesan,
+            confirmButtonColor: '#059669',
+            customClass: { confirmButton: 'rounded-xl px-6 py-2.5 font-bold shadow-sm' }
+        }).then(() => {
+            window.history.replaceState(null, null, window.location.pathname);
+        });
+    }
+});
+</script>
 <?php endif; ?>
 
 <?php if($action === 'list'): ?>
@@ -124,7 +140,7 @@ require_once 'layout.php';
                            class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 rounded-lg text-xs font-semibold transition">
                             <i class="fas fa-edit"></i> Edit
                         </a>
-                        <a href="?delete=<?= $row['id'] ?>" onclick="return confirm('Hapus perangkat ini?')"
+                        <a href="#" onclick="konfirmasiHapus('?delete=<?= $row['id'] ?>', '<?= addslashes(htmlspecialchars($row['nama'])) ?>'); return false;"
                            class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-1 rounded-lg text-xs font-semibold transition">
                             <i class="fas fa-trash"></i>
                         </a>
