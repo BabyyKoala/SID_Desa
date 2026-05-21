@@ -8,7 +8,7 @@ if (!function_exists('formatTanggal')) {
     }
 }
 
-// Fungsi pembersih karakter &amp; yang error berulang dari database
+// Fungsi pembersih karakter & yang error berulang dari database
 if (!function_exists('cleanText')) {
     function cleanText($text) {
         $text = str_replace(['&amp;amp;amp;amp;', '&amp;amp;amp;', '&amp;amp;', '&amp;'], '&', $text);
@@ -38,7 +38,6 @@ require_once '../config/header.php';
     <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Informasi Desa</h1>
     <p class="text-gray-500 mb-8 leading-relaxed">Kabar terbaru, direktori UMKM, potensi unggulan, dan struktur perangkat Desa Darmakradenan.</p>
 
-    <!-- TABS -->
     <div class="flex gap-2 overflow-x-auto pb-2 mb-8 scrollbar-hide">
         <?php
         $tabs = [
@@ -58,46 +57,40 @@ require_once '../config/header.php';
         <?php endforeach; ?>
     </div>
 
-    <!-- ======================== BERITA ======================== -->
     <?php if($tab === 'berita'): ?>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <?php if($berita_list && $berita_list->num_rows > 0): ?>
             <?php while($row = $berita_list->fetch_assoc()): ?>
             <div class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-all duration-300">
-                <div class="h-48 bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center overflow-hidden border-b border-gray-50 relative cursor-pointer" onclick="openModalBerita(<?= $row['id'] ?>)">
+                
+                <a href="detail-berita.php?id=<?= $row['id'] ?>" class="block h-48 bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center overflow-hidden border-b border-gray-50 relative">
                     <?php if($row['gambar'] && file_exists('../uploads/berita/'.$row['gambar'])): ?>
                         <img src="../uploads/berita/<?= $row['gambar'] ?>" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 absolute inset-0">
                     <?php else: ?>
                         <i class="fas fa-newspaper text-5xl text-primary-300"></i>
                     <?php endif; ?>
-                </div>
+                </a>
+
                 <div class="p-6 flex flex-col flex-grow">
                     <div class="text-xs text-primary-600 font-bold mb-2 uppercase tracking-wider flex items-center gap-1.5">
                         <i class="far fa-calendar-alt"></i><?= formatTanggal($row['tanggal']) ?>
                     </div>
-                    <h3 class="font-bold text-gray-800 leading-snug mb-3 line-clamp-2 cursor-pointer group-hover:text-primary-600 transition-colors" onclick="openModalBerita(<?= $row['id'] ?>)">
-                        <?= htmlspecialchars(cleanText($row['judul'])) ?>
-                    </h3>
+                    
+                    <a href="detail-berita.php?id=<?= $row['id'] ?>">
+                        <h3 class="font-bold text-gray-800 leading-snug mb-3 line-clamp-2 group-hover:text-primary-600 transition-colors">
+                            <?= htmlspecialchars(cleanText($row['judul'])) ?>
+                        </h3>
+                    </a>
+                    
                     <p class="text-gray-500 text-sm line-clamp-3 flex-grow leading-relaxed mb-4">
                         <?= strip_tags(cleanText($row['isi'])) ?>
                     </p>
-                    <button onclick="openModalBerita(<?= $row['id'] ?>)" class="text-primary-600 text-sm font-bold flex items-center gap-1 group/btn hover:text-primary-700 w-max mt-auto">
+                    
+                    <a href="detail-berita.php?id=<?= $row['id'] ?>" class="text-primary-600 text-sm font-bold flex items-center gap-1 group/btn hover:text-primary-700 w-max mt-auto">
                         Baca selengkapnya <i class="fas fa-arrow-right text-xs group-hover/btn:translate-x-1 transition-transform"></i>
-                    </button>
+                    </a>
                 </div>
             </div>
-
-            <!-- Simpan Data Berita untuk Modal -->
-            <script>
-                if(!window.beritaData) window.beritaData = {};
-                window.beritaData[<?= $row['id'] ?>] = {
-                    judul: <?= json_encode(cleanText($row['judul'])) ?>,
-                    tanggal: <?= json_encode(formatTanggal($row['tanggal'])) ?>,
-                    isi: <?= json_encode(cleanText($row['isi'])) ?>,
-                    gambar: <?= json_encode($row['gambar'] && file_exists('../uploads/berita/'.$row['gambar']) ? '../uploads/berita/'.$row['gambar'] : '') ?>,
-                    link: "detail-berita.php?id=<?= $row['id'] ?>"
-                };
-            </script>
             <?php endwhile; ?>
         <?php else: ?>
             <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-16 bg-white rounded-2xl border border-gray-100 border-dashed">
@@ -108,7 +101,6 @@ require_once '../config/header.php';
         <?php endif; ?>
     </div>
 
-    <!-- ======================== UMKM ======================== -->
     <?php elseif($tab === 'umkm'): ?>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <?php if($umkm_list && $umkm_list->num_rows > 0): ?>
@@ -141,7 +133,6 @@ require_once '../config/header.php';
                 </div>
             </div>
 
-            <!-- Simpan Data UMKM untuk Modal -->
             <script>
                 if(!window.umkmData) window.umkmData = {};
                 window.umkmData[<?= $row['id'] ?>] = {
@@ -161,7 +152,6 @@ require_once '../config/header.php';
         <?php endif; ?>
     </div>
 
-    <!-- ======================== POTENSI ======================== -->
     <?php elseif($tab === 'potensi'): ?>
     <?php
     $kategoris = [
@@ -222,7 +212,6 @@ require_once '../config/header.php';
                     </div>
                 </div>
 
-                <!-- Menyimpan Data di JS untuk dikirim ke Modal -->
                 <script>
                     if(!window.potensiData) window.potensiData = {};
                     window.potensiData[<?= $item['id'] ?>] = {
@@ -254,7 +243,6 @@ require_once '../config/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- ======================== LEMBAGA ======================== -->
     <?php elseif($tab === 'lembaga'): ?>
     <div>
         <div class="text-center mb-10">
@@ -294,39 +282,6 @@ require_once '../config/header.php';
     <?php endif; ?>
 </div>
 
-<!-- ======================= MODAL GLOBAL ======================= -->
-
-<!-- MODAL BERITA -->
-<div id="modalBerita" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity opacity-0" id="modalBeritaBackdrop" onclick="closeModal('modalBerita')"></div>
-    <div id="modalBeritaContent" class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative z-10 transform scale-95 opacity-0 transition-all duration-300">
-        <button onclick="closeModal('modalBerita')" class="absolute top-4 right-4 z-20 w-10 h-10 bg-black/40 hover:bg-black/60 text-white rounded-full flex items-center justify-center backdrop-blur-md transition shadow-md">
-            <i class="fas fa-times"></i>
-        </button>
-        <div class="w-full md:w-5/12 h-64 md:h-auto bg-gray-100 flex-shrink-0 relative">
-            <img id="modalBeritaGambar" src="" class="w-full h-full object-cover hidden absolute inset-0">
-            <div id="modalBeritaIconContainer" class="w-full h-full flex items-center justify-center hidden absolute inset-0 bg-gradient-to-br from-primary-50 to-primary-100">
-                <i class="fas fa-newspaper text-7xl text-primary-300"></i>
-            </div>
-        </div>
-        <div class="w-full md:w-7/12 p-6 sm:p-10 overflow-y-auto bg-white flex flex-col">
-            <div class="inline-flex items-center gap-2 bg-primary-50 text-primary-700 text-xs font-bold px-3 py-1.5 rounded-full mb-4 uppercase tracking-wider w-max border border-primary-100">
-                <i class="far fa-calendar-alt"></i> <span id="modalBeritaTanggal"></span>
-            </div>
-            <h2 id="modalBeritaJudul" class="text-2xl sm:text-3xl font-extrabold text-gray-800 mb-6 leading-tight"></h2>
-            <!-- Menggunakan prose untuk menjaga format HTML asli tulisan/paragraf -->
-            <div id="modalBeritaIsi" class="text-gray-600 text-sm sm:text-base leading-relaxed space-y-4 flex-grow prose prose-sm max-w-none"></div>
-            
-            <div class="mt-8 pt-4 border-t border-gray-100">
-                <a href="#" id="modalBeritaLink" class="inline-flex items-center justify-center gap-2 text-sm text-white bg-primary-600 hover:bg-primary-700 px-6 py-3 rounded-xl transition duration-200 font-bold w-full sm:w-auto shadow-sm">
-                    <i class="fas fa-external-link-alt"></i> Halaman Penuh & Berita Lainnya
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MODAL UMKM -->
 <div id="modalUmkm" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity opacity-0" id="modalUmkmBackdrop" onclick="closeModal('modalUmkm')"></div>
     <div id="modalUmkmContent" class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative z-10 transform scale-95 opacity-0 transition-all duration-300">
@@ -355,7 +310,6 @@ require_once '../config/header.php';
     </div>
 </div>
 
-<!-- MODAL POTENSI -->
 <div id="modalPotensi" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity opacity-0" id="modalPotensiBackdrop" onclick="closeModal('modalPotensi')"></div>
     <div id="modalPotensiContent" class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative z-10 transform scale-95 opacity-0 transition-all duration-300">
@@ -378,22 +332,7 @@ require_once '../config/header.php';
     </div>
 </div>
 
-<!-- SCRIPT PENGENDALI MODAL -->
 <script>
-// Fungsi Buka Modal Berita
-function openModalBerita(id) {
-    const data = window.beritaData[id];
-    if(!data) return;
-    
-    document.getElementById('modalBeritaJudul').innerText = data.judul;
-    document.getElementById('modalBeritaTanggal').innerText = data.tanggal;
-    document.getElementById('modalBeritaIsi').innerHTML = data.isi; // Mempertahankan format rich text (HTML)
-    document.getElementById('modalBeritaLink').href = data.link;
-    
-    toggleGambarModal('modalBerita', data.gambar, null);
-    showModal('modalBerita');
-}
-
 // Fungsi Buka Modal UMKM
 function openModalUmkm(id) {
     const data = window.umkmData[id];
@@ -428,7 +367,7 @@ function openModalPotensi(id) {
     showModal('modalPotensi');
 }
 
-// --- FUNGSI HELPER MODAL (TIDAK PERLU DIUBAH) ---
+// --- FUNGSI HELPER MODAL ---
 function toggleGambarModal(prefix, gambarSrc, defaultIcon) {
     const imgEl = document.getElementById(prefix + 'Gambar');
     const iconEl = document.getElementById(prefix + 'IconContainer');
