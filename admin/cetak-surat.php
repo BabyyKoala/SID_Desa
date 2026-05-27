@@ -9,15 +9,30 @@ if (!isset($_SESSION['admin_name'])) {
 }
 
 $id = (int)$_GET['id'];
-// Ambil data surat dan gabungkan dengan data penduduk untuk alamat yang lebih lengkap
+
+// SOLUSI: Mengembalikan ke p.alamat AS alamat_lengkap dan p.jenis_kelamin sesuai kolom fisik database Anda
 $query = "SELECT s.*, p.alamat as alamat_lengkap, p.jenis_kelamin 
           FROM surat s 
           LEFT JOIN penduduk p ON s.nik = p.nik 
           WHERE s.id = $id";
-$data = $conn->query($query)->fetch_assoc();
+$result = $conn->query($query);
 
-if (!$data) {
-    die("Data surat tidak ditemukan.");
+if ($result && $result->num_rows > 0) {
+    $data = $result->fetch_assoc();
+} else {
+    die("Data surat tidak ditemukan di dalam database.");
+}
+
+// Logika Jenis Kelamin Fleksibel (Mendukung format 'L', 'Laki-laki', 'P', maupun 'Perempuan')
+$jk_mentah = strtoupper(trim($data['jenis_kelamin'] ?? ''));
+$jenis_kelamin_cetak = '-';
+
+if ($jk_mentah == 'L' || $jk_mentah == 'LAKI-LAKI') {
+    $jenis_kelamin_cetak = 'Laki-laki';
+} elseif ($jk_mentah == 'P' || $jk_mentah == 'PEREMPUAN') {
+    $jenis_kelamin_cetak = 'Perempuan';
+} else {
+    $jenis_kelamin_cetak = $data['jenis_kelamin'] ?? '-'; // Fallback aman jika format berbeda
 }
 
 // Format Tanggal Indonesia
@@ -26,67 +41,192 @@ function tgl_indo($tanggal){
     $pecahkan = explode('-', date('Y-m-d', strtotime($tanggal)));
     return $pecahkan[2] . ' ' . $bulan[ (int)$pecahkan[1] ] . ' ' . $pecahkan[0];
 }
+
+// Format Nomor Surat (Menambahkan angka 0 di depan ID agar rapi, contoh: 001, 012)
+$nomor_urut = str_pad($data['id'], 3, "0", STR_PAD_LEFT);
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Cetak <?= $data['jenis_surat'] ?> - <?= $data['nama'] ?></title>
+    <title>Cetak Surat - <?= htmlspecialchars($data['nama']) ?></title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { font-family: "Times New Roman", Times, serif; background-color: #ccc; padding: 20px; }
-        .sheet { width: 210mm; height: 297mm; background: white; margin: 0 auto; padding: 20px 30px; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        /* RESET & BASE SETUP */
+        body { 
+            font-family: "Times New Roman", Times, serif; 
+            background-color: #e2e8f0; 
+            margin: 0; 
+            padding: 40px 20px; 
+            font-size: 12pt;
+            color: #000;
+        }
+        
+        /* UKURAN KERTAS A4 (Standar Tata Naskah Dinas Resmi) */
+        .sheet { 
+            width: 210mm; 
+            min-height: 297mm; 
+            background: white; 
+            margin: 0 auto; 
+            padding: 2.5cm 3cm; /* Margin standar: Kiri/Kanan lebih lebar */
+            box-sizing: border-box; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); 
+            position: relative;
+        }
         
         /* KOP SURAT */
-        .kop-surat { border-bottom: 3px double #000; padding-bottom: 5px; margin-bottom: 20px; text-align: center; position: relative; }
-        .logo-desa { position: absolute; left: 0; top: 0; width: 80px; }
-        .kop-text h2 { margin: 0; font-size: 18px; text-transform: uppercase; }
-        .kop-text h1 { margin: 0; font-size: 22px; text-transform: uppercase; }
-        .kop-text p { margin: 2px 0; font-size: 12px; font-style: italic; }
+        .kop-surat { 
+            border-bottom: 4px double #000; 
+            padding-bottom: 10px; 
+            margin-bottom: 35px; 
+            position: relative; 
+            text-align: center; 
+        }
+        .logo-desa { 
+            position: absolute; 
+            left: 0; 
+            top: 5px; 
+            width: 90px; 
+            height: auto;
+        }
+        .kop-text {
+            padding: 0 90px; /* Menjaga teks tetap di tengah tanpa tertabrak logo */
+        }
+        .kop-text h2 { 
+            margin: 0; 
+            font-size: 14pt; 
+            font-weight: normal; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+        }
+        .kop-text h1 { 
+            margin: 3px 0; 
+            font-size: 18pt; 
+            font-weight: bold; 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px;
+        }
+        .kop-text p { 
+            margin: 0; 
+            font-size: 11pt; 
+        }
+
+        /* JUDUL SURAT */
+        .judul-surat { 
+            text-align: center; 
+            margin-bottom: 35px; 
+        }
+        .judul-surat h3 { 
+            margin: 0 0 2px 0; 
+            text-transform: uppercase; 
+            text-decoration: underline; 
+            font-size: 14pt; 
+            font-weight: bold;
+        }
+        .judul-surat p { 
+            margin: 0; 
+            font-size: 12pt; 
+        }
 
         /* ISI SURAT */
-        .judul-surat { text-align: center; margin-bottom: 25px; }
-        .judul-surat h3 { margin: 0; text-transform: uppercase; text-decoration: underline; font-size: 16px; }
-        .judul-surat p { margin: 5px 0; font-size: 14px; }
-
-        .isi-surat { font-size: 14px; line-height: 1.6; text-align: justify; }
-        .identitas-table { margin: 15px 0 15px 40px; border-collapse: collapse; }
-        .identitas-table td { padding: 2px 5px; vertical-align: top; }
+        .isi-surat p { 
+            font-size: 12pt; 
+            line-height: 1.5; 
+            text-align: justify; 
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-indent: 40px; /* Paragraf menjorok ke dalam */
+        }
+        
+        .identitas-table { 
+            margin: 10px 0 20px 40px; 
+            border-collapse: collapse; 
+            width: 90%;
+            font-size: 12pt;
+        }
+        .identitas-table td { 
+            padding: 4px 5px; 
+            vertical-align: top; 
+            line-height: 1.4;
+        }
 
         /* TANDA TANGAN */
-        .ttd-container { margin-top: 50px; float: right; width: 250px; text-align: center; font-size: 14px; }
-        .ttd-space { height: 80px; }
+        .ttd-container { 
+            margin-top: 50px; 
+            float: right; 
+            width: 280px; 
+            text-align: center; 
+            font-size: 12pt; 
+        }
+        .ttd-container p {
+            margin: 0 0 5px 0;
+        }
+        .ttd-space { 
+            height: 90px; /* Ruang untuk stempel dan tanda tangan asli */
+        }
 
-        /* ATURAN CETAK */
+        /* PANEL KONTROL (Hanya tampil di layar monitor) */
+        .control-panel {
+            max-width: 210mm;
+            margin: 0 auto 20px auto;
+            text-align: center;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .btn-print {
+            padding: 12px 25px; 
+            background: #16a34a; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-print:hover { background: #15803d; }
+        .help-text { font-size: 13px; color: #64748b; margin-top: 10px; margin-bottom: 0; }
+
+        /* ATURAN SAAT DICETAK KE KERTAS / PDF */
         @media print {
             body { background: none; padding: 0; }
-            .sheet { box-shadow: none; margin: 0; width: 100%; }
-            .no-print { display: none; }
+            .sheet { box-shadow: none; margin: 0; padding: 2.5cm 3cm; width: 100%; height: 100%; }
+            .no-print { display: none !important; }
+            @page { size: A4 portrait; margin: 0; }
         }
     </style>
 </head>
 <body>
 
-<div class="no-print" style="margin-bottom: 20px; text-align: center;">
-    <button onclick="window.print()" style="padding: 10px 20px; background: #16a34a; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
-        <i class="fas fa-print"></i> KLIK UNTUK CETAK SEKARANG
+<div class="control-panel no-print">
+    <button onclick="window.print()" class="btn-print">
+        <i class="fas fa-print"></i> CETAK DOKUMEN RESMI
     </button>
-    <p style="font-size: 12px; color: #666;">Gunakan browser Chrome/Edge, pilih 'Save as PDF' atau langsung ke Printer.</p>
+    <p class="help-text">Gunakan browser Google Chrome atau Microsoft Edge. Tekan <strong>Ctrl+P</strong> dan pastikan pengaturan margin diset ke 'Default' atau 'None'.</p>
 </div>
 
 <div class="sheet">
+    
     <div class="kop-surat">
        <img src="../assets/logo-banyumas.png" class="logo-desa" alt="Logo Kabupaten Banyumas">
         <div class="kop-text">
             <h2>Pemerintah Kabupaten Banyumas</h2>
             <h2>Kecamatan Ajibarang</h2>
             <h1>Pemerintah Desa Darmakradenan</h1>
-            <p>Alamat: Jl. Raya Darmakradenan No. 01, Kode Pos 53163</p>
+            <p>Jalan Raya Darmakradenan No. 01, Kode Pos 53163</p>
         </div>
     </div>
 
     <div class="judul-surat">
-        <h3><?= $data['jenis_surat'] ?></h3>
-        <p>Nomor: 470 / <?= $data['id'] ?> / <?= date('Y') ?></p>
+        <h3><?= htmlspecialchars($data['jenis_surat']) ?></h3>
+        <p>Nomor: 470 / <?= $nomor_urut ?> / <?= date('Y') ?></p>
     </div>
 
     <div class="isi-surat">
@@ -94,49 +234,46 @@ function tgl_indo($tanggal){
         
         <table class="identitas-table">
             <tr>
-                <td width="150">Nama Lengkap</td>
-                <td width="10">:</td>
-                <td><strong><?= strtoupper($data['nama']) ?></strong></td>
+                <td width="160">Nama Lengkap</td>
+                <td width="15">:</td>
+                <td><strong><?= strtoupper(htmlspecialchars($data['nama'])) ?></strong></td>
             </tr>
             <tr>
-                <td>NIK</td>
+                <td>Nomor Induk Kependudukan</td>
                 <td>:</td>
-                <td><?= $data['nik'] ?></td>
+                <td><?= htmlspecialchars($data['nik']) ?></td>
             </tr>
             <tr>
                 <td>Jenis Kelamin</td>
                 <td>:</td>
-                <td><?= $data['jenis_kelamin'] == 'L' ? 'Laki-laki' : 'Perempuan' ?></td>
+                <td><?= $jenis_kelamin_cetak ?></td>
             </tr>
             <tr>
-                <td>Alamat</td>
+                <td>Alamat Lengkap</td>
                 <td>:</td>
-                <td><?= $data['alamat_lengkap'] ?: 'Warga Desa Darmakradenan' ?></td>
+                <td><?= htmlspecialchars($data['alamat_lengkap'] ?: 'Desa Darmakradenan, Kec. Ajibarang') ?></td>
             </tr>
             <tr>
-                <td>Keperluan</td>
+                <td>Keperluan Pengajuan</td>
                 <td>:</td>
-                <td><em><?= $data['keperluan'] ?></em></td>
+                <td><em><?= htmlspecialchars($data['keperluan']) ?></em></td>
             </tr>
         </table>
 
-        <p>Orang tersebut di atas adalah benar-benar warga kami yang bertempat tinggal di Desa Darmakradenan. Sepanjang pengetahuan kami yang bersangkutan berkelakuan baik dan surat keterangan ini diberikan untuk memenuhi persyaratan administrasi yang bersangkutan.</p>
+        <p>Orang tersebut di atas adalah benar-benar warga yang bertempat tinggal di wilayah Desa Darmakradenan. Sepanjang pengamatan dan pengetahuan kami, yang bersangkutan berkelakuan baik di tengah masyarakat. Surat keterangan ini diterbitkan guna memenuhi persyaratan administrasi yang bersangkutan.</p>
         
-        <p>Demikian surat keterangan ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya.</p>
+        <p>Demikian surat keterangan ini kami buat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya oleh pihak yang berkepentingan.</p>
     </div>
 
     <div class="ttd-container">
         <p>Darmakradenan, <?= tgl_indo(date('Y-m-d')) ?></p>
         <p>Kepala Desa Darmakradenan</p>
         <div class="ttd-space"></div>
-        <p><strong>( ............................................ )</strong></p>
+        <p><strong>( .................................................... )</strong></p>
     </div>
+    
+    <div style="clear: both;"></div>
 </div>
-
-<script>
-    // Otomatis memicu dialog print saat halaman dimuat
-    // window.print();
-</script>
 
 </body>
 </html>

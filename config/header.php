@@ -119,9 +119,9 @@ function isMenuAktif($path) {
             <span class="flex items-center gap-1.5"><i class="fas fa-envelope text-primary-400"></i> pemdes@darmakradenan.desa.id</span>
         </div>
         <div class="flex items-center gap-4">
-            <a href="#" class="hover:text-primary-300 transition-colors" title="Facebook Desa"><i class="fab fa-facebook-f text-sm"></i></a>
-            <a href="#" class="hover:text-primary-300 transition-colors" title="Instagram Desa"><i class="fab fa-instagram text-sm"></i></a>
-            <a href="#" class="hover:text-primary-300 transition-colors" title="YouTube Desa"><i class="fab fa-youtube text-sm"></i></a>
+            <a href="https://facebook.com/DesaDarmakradenan" target="_blank" class="hover:text-primary-300 transition-colors" title="Facebook Desa"><i class="fab fa-facebook-f text-sm"></i></a>
+            <a href="https://instagram.com/desa_darmakradenan" target="_blank" class="hover:text-primary-300 transition-colors" title="Instagram Desa"><i class="fab fa-instagram text-sm"></i></a>
+            <a href="https://youtube.com/@desadarmakradenan2192" target="_blank" class="hover:text-primary-300 transition-colors" title="YouTube Desa"><i class="fab fa-youtube text-sm"></i></a>
         </div>
     </div>
 </div>

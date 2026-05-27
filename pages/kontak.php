@@ -69,9 +69,9 @@ require_once '../config/header.php';
             <div class="bg-primary-900 rounded-3xl p-6 text-white text-center shadow-md">
                 <div class="text-sm font-bold text-primary-200 uppercase tracking-wider mb-4">Ikuti Kami di Sosial Media</div>
                 <div class="flex justify-center gap-4">
-                    <a href="#" class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 hover:text-white hover:-translate-y-1 transition-all" title="Facebook"><i class="fab fa-facebook-f text-xl"></i></a>
-                    <a href="#" class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 hover:text-white hover:-translate-y-1 transition-all" title="Instagram"><i class="fab fa-instagram text-xl"></i></a>
-                    <a href="#" class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 hover:text-white hover:-translate-y-1 transition-all" title="YouTube"><i class="fab fa-youtube text-xl"></i></a>
+                    <a href="https://facebook.com/DesaDarmakradenan" target="_blank" class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 hover:text-white hover:-translate-y-1 transition-all" title="Facebook Desa Darmakradenan"><i class="fab fa-facebook-f text-xl"></i></a>
+                    <a href="https://instagram.com/desa_darmakradenan" target="_blank" class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 hover:text-white hover:-translate-y-1 transition-all" title="Instagram @desa_darmakradenan"><i class="fab fa-instagram text-xl"></i></a>
+                    <a href="https://youtube.com/@desadarmakradenan2192" target="_blank" class="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 hover:text-white hover:-translate-y-1 transition-all" title="YouTube @desadarmakradenan2192"><i class="fab fa-youtube text-xl"></i></a>
                 </div>
             </div>
 

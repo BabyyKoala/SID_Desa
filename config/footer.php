@@ -29,13 +29,13 @@ if (!defined('WA_NUMBER')) {
                     Sistem Informasi Desa terpadu untuk mempermudah pelayanan administrasi publik dan transparansi informasi bagi seluruh warga Desa Darmakradenan.
                 </p>
                 <div class="flex items-center gap-3">
-                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-green-600 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300" title="Facebook">
+                    <a href="https://facebook.com/DesaDarmakradenan" target="_blank" class="w-9 h-9 rounded-full bg-white/5 hover:bg-green-600 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300" title="Facebook Desa Darmakradenan">
                         <i class="fab fa-facebook-f text-sm"></i>
                     </a>
-                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-green-600 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300" title="Instagram">
+                    <a href="https://instagram.com/desa_darmakradenan" target="_blank" class="w-9 h-9 rounded-full bg-white/5 hover:bg-green-600 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300" title="Instagram @desa_darmakradenan">
                         <i class="fab fa-instagram text-sm"></i>
                     </a>
-                    <a href="#" class="w-9 h-9 rounded-full bg-white/5 hover:bg-green-600 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300" title="YouTube">
+                    <a href="https://youtube.com/@desadarmakradenan2192" target="_blank" class="w-9 h-9 rounded-full bg-white/5 hover:bg-green-600 flex items-center justify-center text-gray-400 hover:text-white transition-all duration-300" title="YouTube @desadarmakradenan2192">
                         <i class="fab fa-youtube text-sm"></i>
                     </a>
                 </div>
@@ -97,9 +97,9 @@ if (!defined('WA_NUMBER')) {
         <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500 font-medium">
             <p>&copy; <?= date('Y') ?> Pemerintah Desa Darmakradenan. Hak Cipta Dilindungi.</p>
             <div class="flex gap-4">
-                <a href="#" class="hover:text-gray-300 transition-colors">Syarat & Ketentuan</a>
+                <a href="javascript:void(0)" onclick="showSyaratKetentuan()" class="hover:text-gray-300 transition-colors">Syarat & Ketentuan</a>
                 <span class="text-gray-700">|</span>
-                <a href="#" class="hover:text-gray-300 transition-colors">Kebijakan Privasi</a>
+                <a href="javascript:void(0)" onclick="showKebijakanPrivasi()" class="hover:text-gray-300 transition-colors">Kebijakan Privasi</a>
             </div>
         </div>
     </div>
@@ -127,19 +127,73 @@ function konfirmasiHapus(url, namaData) {
         text: `Anda yakin ingin menghapus "${namaData}"? Data yang sudah dihapus tidak bisa dikembalikan.`,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#ef4444', // Merah Tailwind untuk Hapus
-        cancelButtonColor: '#6b7280', // Abu-abu Tailwind untuk Batal
+        confirmButtonColor: '#ef4444', 
+        cancelButtonColor: '#6b7280', 
         confirmButtonText: '<i class="fas fa-trash"></i> Ya, Hapus!',
         cancelButtonText: 'Batal',
-        reverseButtons: true, // Memindahkan tombol batal ke sebelah kanan
+        reverseButtons: true,
         customClass: {
             confirmButton: 'rounded-xl px-4 py-2 font-bold shadow-sm',
             cancelButton: 'rounded-xl px-4 py-2 font-bold shadow-sm'
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Jika dikonfirmasi, redirect ke link penghapusan
             window.location.href = url;
+        }
+    });
+}
+
+// Fungsi untuk memunculkan Modal Syarat & Ketentuan
+function showSyaratKetentuan() {
+    Swal.fire({
+        title: '<strong class="text-gray-800">Syarat & Ketentuan</strong>',
+        icon: 'info',
+        html: `
+            <div class="text-left text-sm text-gray-600 space-y-4 mt-2 max-h-80 overflow-y-auto pr-2">
+                <p>Selamat datang di Sistem Informasi Desa (SID) Darmakradenan. Dengan menggunakan layanan ini, Anda menyetujui ketentuan berikut:</p>
+                <ol class="list-decimal pl-5 space-y-2">
+                    <li><strong>Akurasi Data:</strong> Warga wajib memberikan informasi dan data diri yang benar, asli, dan dapat dipertanggungjawabkan saat melakukan pengajuan surat atau pelaporan.</li>
+                    <li><strong>Penggunaan Layanan:</strong> Layanan ini diperuntukkan khusus bagi warga Desa Darmakradenan untuk keperluan administrasi dan penyampaian aspirasi secara bijak.</li>
+                    <li><strong>Larangan Penyalahgunaan:</strong> Segala bentuk penyalahgunaan sistem, pemalsuan identitas, atau pengiriman konten yang mengandung SARA, ujaran kebencian, dan melanggar hukum akan ditindak sesuai peraturan perundang-undangan.</li>
+                    <li><strong>Hak Akses Admin:</strong> Admin desa berhak menolak pengajuan surat atau menghapus laporan pengaduan yang terindikasi tidak valid atau menyalahi aturan.</li>
+                    <li><strong>Perubahan Ketentuan:</strong> Pemerintah Desa Darmakradenan berhak mengubah syarat dan ketentuan ini sewaktu-waktu tanpa pemberitahuan sebelumnya.</li>
+                </ol>
+            </div>
+        `,
+        showCloseButton: true,
+        focusConfirm: false,
+        confirmButtonText: '<i class="fas fa-check-circle"></i> Saya Mengerti',
+        confirmButtonColor: '#16a34a',
+        width: '600px',
+        customClass: {
+            confirmButton: 'rounded-xl px-5 py-2.5 font-bold shadow-sm'
+        }
+    });
+}
+
+// Fungsi untuk memunculkan Modal Kebijakan Privasi
+function showKebijakanPrivasi() {
+    Swal.fire({
+        title: '<strong class="text-gray-800">Kebijakan Privasi</strong>',
+        icon: 'success',
+        html: `
+            <div class="text-left text-sm text-gray-600 space-y-4 mt-2 max-h-80 overflow-y-auto pr-2">
+                <p>Pemerintah Desa Darmakradenan berkomitmen tinggi untuk menghargai dan melindungi kerahasiaan data pribadi Anda. Berikut adalah kebijakan kami:</p>
+                <ol class="list-decimal pl-5 space-y-2">
+                    <li><strong>Pengumpulan Data:</strong> Kami mengumpulkan data NIK, Nama, nomor telepon, alamat, dan informasi terkait lainnya murni untuk keperluan verifikasi administrasi desa.</li>
+                    <li><strong>Keamanan & Penyimpanan:</strong> Data Anda tersimpan secara aman di dalam *database* sistem kami dengan akses yang sangat terbatas dan hanya dapat dilihat oleh perangkat desa yang berwenang.</li>
+                    <li><strong>Kerahasiaan Data:</strong> Kami <strong>tidak akan</strong> membagikan, menjual, menyewakan, atau menyebarkan data pribadi Anda kepada pihak ketiga manapun tanpa persetujuan tertulis dari Anda, kecuali diwajibkan oleh proses hukum.</li>
+                    <li><strong>Keterbukaan Publik:</strong> Data yang ditampilkan pada statistik publik (seperti Demografi) hanyalah berupa angka akumulasi massal, tanpa mencantumkan identitas individu warga manapun.</li>
+                </ol>
+            </div>
+        `,
+        showCloseButton: true,
+        focusConfirm: false,
+        confirmButtonText: '<i class="fas fa-check-circle"></i> Tutup',
+        confirmButtonColor: '#16a34a',
+        width: '600px',
+        customClass: {
+            confirmButton: 'rounded-xl px-5 py-2.5 font-bold shadow-sm'
         }
     });
 }
