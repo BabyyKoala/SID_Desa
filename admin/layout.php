@@ -21,7 +21,7 @@ $current = basename($_SERVER['PHP_SELF']);
 $restricted_pages = [
     'super_admin' => [], // Super admin bebas ke mana saja
     'staf' => ['kelola-penduduk.php', 'kelola-transparansi.php'], // Staf tidak boleh akses data kependudukan & uang
-    'kepala_desa' => ['kelola-penduduk.php', 'kelola-surat.php', 'kelola-pengaduan.php', 'kelola-berita.php', 'kelola-umkm.php', 'kelola-potensi.php', 'kelola-lembaga.php'] // Kades hanya lihat dashboard & transparansi
+    'kepala_desa' => ['kelola-penduduk.php', 'kelola-surat.php', 'kelola-pengaduan.php', 'kelola-berita.php', 'kelola-umkm.php', 'kelola-potensi.php', 'kelola-lembaga.php'] // Kades hanya lihat dashboard, laporan & transparansi
 ];
 
 // Jika user mencoba mengakses halaman terlarang
@@ -99,6 +99,10 @@ if (in_array($current, $restricted_pages[$admin_role])) {
     <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
         <a href="dashboard.php" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-600 <?= $current === 'dashboard.php' ? 'active' : '' ?>">
             <i class="fas fa-tachometer-alt w-5 text-center text-sm"></i> Dashboard
+        </a>
+        
+        <a href="laporan-bulanan.php" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-gray-600 <?= $current === 'laporan-bulanan.php' ? 'active' : '' ?>">
+            <i class="fas fa-chart-line w-5 text-center text-sm"></i> Laporan Bulanan
         </a>
 
         <?php if($admin_role === 'super_admin'): ?>
