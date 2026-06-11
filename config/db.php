@@ -8,7 +8,7 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'sid_desa');
 define('BASE_URL', 'http://localhost/sid_desa');
-define('WA_NUMBER', '6282134655359'); // Ganti dengan nomor WA admin desa
+define('WA_NUMBER', '6282134655359'); 
 
 $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
