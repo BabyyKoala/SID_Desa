@@ -138,13 +138,34 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                             
                             <?php if($row['status'] == 'Selesai'): ?>
-                            <div class="mt-4 bg-green-50 border border-green-200 rounded-lg p-3.5 text-sm text-green-700 flex items-start gap-2.5">
-                                <i class="fas fa-check-circle mt-0.5"></i>
-                                <div>
-                                    <strong>Surat Anda sudah selesai!</strong><br>
-                                    Silakan ambil dokumen fisik di kantor balai desa Darmakradenan pada jam kerja, atau hubungi admin.
+                            <div class="mt-4 bg-green-50 border border-green-200 rounded-xl p-4 sm:p-5 text-sm text-green-800 shadow-sm relative overflow-hidden">
+                                <i class="fas fa-check-circle absolute -right-4 -bottom-4 text-7xl text-green-500 opacity-10"></i>
+                                
+                                <div class="flex items-start gap-3 mb-4 relative z-10">
+                                    <div class="bg-green-500 text-white p-2 rounded-full mt-0.5 shadow-sm">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div>
+                                        <strong class="text-base text-green-900">Surat Anda Telah Terbit!</strong><br>
+                                        <span class="text-green-700">Silakan pilih metode pengambilan dokumen di bawah ini:</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
+                                    <a href="../admin/cetak-surat.php?kode=<?= htmlspecialchars($row['kode_pengajuan']) ?>" target="_blank"
+                                       class="bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-3.5 rounded-xl flex items-center justify-center gap-2 transition shadow hover:-translate-y-0.5">
+                                        <i class="fas fa-file-pdf text-lg"></i> Download PDF (TTD Digital)
+                                    </a>
+                                    
+                                    <div class="bg-white border border-green-200 text-green-800 px-4 py-3 rounded-xl flex items-center gap-3 shadow-sm">
+                                        <div class="bg-green-100 p-2.5 rounded-lg shrink-0 text-green-600">
+                                            <i class="fas fa-building text-lg"></i>
+                                        </div>
+                                        <span class="text-xs font-medium leading-snug">Atau ambil fisik dokumen dengan <strong>stempel basah</strong> di Balai Desa saat jam kerja.</span>
+                                    </div>
                                 </div>
                             </div>
+
                             <?php elseif($row['status'] == 'Ditolak'): ?>
                             <div class="mt-4 bg-red-50 border border-red-200 rounded-lg p-3.5 text-sm text-red-700 flex items-start gap-2.5">
                                 <i class="fas fa-times-circle mt-0.5"></i>
